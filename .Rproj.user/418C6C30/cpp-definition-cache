@@ -1,15 +1,24 @@
 [
     {
         "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
-        "file_last_write": 1619699276.0,
+        "file_last_write": 1620048353.0,
         "definitions": [
+            {
+                "usr": "c:@F@soft_t#d#&1d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "soft_t(double, const double &)",
+                "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
+                "line": 5,
+                "column": 8
+            },
             {
                 "usr": "c:@F@log1mexp#d#",
                 "kind": 6,
                 "parent_name": "",
                 "name": "log1mexp(double)",
                 "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
-                "line": 5,
+                "line": 17,
                 "column": 8
             },
             {
@@ -18,7 +27,34 @@
                 "parent_name": "",
                 "name": "log1mexp(arma::vec)",
                 "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
-                "line": 19,
+                "line": 31,
+                "column": 11
+            },
+            {
+                "usr": "c:@F@lik_ee#d#&1d#S0_#&1I#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "lik_ee(double, const double &, const double &, const int &)",
+                "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
+                "line": 39,
+                "column": 8
+            },
+            {
+                "usr": "c:@F@lik_ee#$@N@arma@S@Col>#d#&1S0_#S1_#&1I#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "lik_ee(arma::vec, const arma::vec &, const arma::vec &, const int &)",
+                "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
+                "line": 63,
+                "column": 11
+            },
+            {
+                "usr": "c:@F@update_beta_ee#&1$@N@arma@S@Col>#d#&1$@N@arma@S@Mat>#d#S1_#S0_#S0_#S0_#&1i#&1d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "update_beta_ee(const arma::vec &, const arma::mat &, arma::vec, const arma::vec &, const arma::vec &, const arma::vec &, const uint &, const double &)",
+                "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
+                "line": 72,
                 "column": 11
             },
             {
@@ -27,7 +63,7 @@
                 "parent_name": "",
                 "name": "neg_ll_exp_cpp(arma::vec, arma::mat, arma::vec, arma::vec, uint, const double)",
                 "file": "/Users/karekv/GitHub/fglm/src/misc.cpp",
-                "line": 29,
+                "line": 115,
                 "column": 12
             }
         ]

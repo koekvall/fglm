@@ -2,6 +2,18 @@
 #include <cmath>
 #include <limits>
 
+double soft_t(double x, const double& lam)
+{
+  if(lam >= std::abs(x)){
+    x = 0.0;
+  } else if(x > 0){
+      x = x - lam;
+  } else{
+      x = x + lam;
+  }
+  return x;
+}
+
 double log1mexp(double x)
 {
   if(x <= 0.0){
@@ -23,6 +35,80 @@ arma::vec log1mexp(arma::vec x)
   }
   return x;
 }
+
+double lik_ee(double y, const double& yupp, const double& eta, const int& order)
+{
+  const double infty = std::numeric_limits<double>::infinity();
+  double theta = std::exp(eta);
+  double out = -y * theta;
+
+  if(yupp < infty){
+    y = yupp - y;
+    if(order == 1){
+      y = log(y) + eta - y * theta - log1mexp(y * theta);
+      out += exp(y);
+    } else if(order == 2){
+      double log_scale = 2.0 * eta - y * theta + 2.0 * std::log(y);
+      log_scale -= 2.0 * log1mexp(y * theta);
+      log_scale += std::log1p(std::exp(-eta - y * theta -
+      std::log(y)) - std::exp(-eta - std::log(y)));
+      out -= exp(log_scale);
+    } else{
+      out += log1mexp(y * theta);
+    }
+  }
+  return out;
+}
+
+arma::vec lik_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const
+int& order)
+{
+  for(uint ii = 0; ii < y.n_elem; ii++){
+    y(ii) = lik_ee(y(ii), yupp(ii), eta(ii), order);
+  }
+  return y;
+}
+
+arma::vec update_beta_ee(const arma::vec& y, const arma::mat& X, arma::vec b,
+const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint&
+maxit, const double& tol)
+{
+  const uint p = X.n_cols;
+
+  arma::vec eta = X * b;
+  arma::vec eta_current = eta;
+  arma::vec gk = lik_ee(y, yupp, eta, 1);
+  arma::vec hk = lik_ee(y, yupp, eta, 2);
+  arma::vec z = X.col(1) * b(1);
+
+  for(size_t ll = 0; ll < maxit; ++ll){
+    for(size_t jj = 0; jj < p; ++jj){
+      double b_old = b(jj);
+      b(jj) = soft_t(arma::mean(hk % X.col(jj) % z - gk % X.col(jj)),
+      lam1(jj));
+      b(jj) *= 1.0 / (lam2(jj) + arma::mean(hk %
+      arma::square(X.col(jj))));
+      // prepare next beta iteration
+      z -= X.col(jj) * b(jj);
+      if(jj < p - 1){
+        z += X.col(jj + 1) * b(jj + 1);
+      }
+      eta_current += X.col(jj) * (b(jj) - b_old);
+    }
+    //Check convergence
+    double del = arma::mean(arma::abs(eta_current - eta));
+    if(del < tol){
+      break;
+    }
+    // Prepare new iteration
+    eta = eta_current;
+    if(ll == maxit - 1){
+      Rcpp::warning("Coordiante descent reached maxit")
+    }
+  }
+  return b;
+}
+
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
