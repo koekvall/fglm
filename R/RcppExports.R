@@ -5,6 +5,18 @@ log1mexp <- function(x) {
     .Call(`_fglm_log1mexp`, x)
 }
 
+lik_ee <- function(y, yupp, eta, order) {
+    .Call(`_fglm_lik_ee`, y, yupp, eta, order)
+}
+
+obj_fun_ee <- function(y, yupp, eta, b, lam1, lam2) {
+    .Call(`_fglm_obj_fun_ee`, y, yupp, eta, b, lam1, lam2)
+}
+
+fista_ee <- function(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc) {
+    .Call(`_fglm_fista_ee`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
+}
+
 neg_ll_exp_cpp <- function(y, X, b, yupp, order, pen) {
     .Call(`_fglm_neg_ll_exp_cpp`, y, X, b, yupp, order, pen)
 }
