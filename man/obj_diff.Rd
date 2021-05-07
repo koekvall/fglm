@@ -13,7 +13,7 @@ obj_diff(
   yupp,
   lam = 0,
   alpha = 1,
-  pen_factor = c(0, rep(1, ncol(X))),
+  pen_factor = c(0, rep(1, ncol(X) - 1)),
   order
 )
 }

@@ -68,7 +68,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #'  objective function
 #' }
 #' @export
-obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1, ncol(X))), order){
+obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1, ncol(X) - 1)), order){
   # Do argument checking
   stopifnot(is.matrix(X))
   p <- ncol(X)
