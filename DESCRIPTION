@@ -1,11 +1,13 @@
 Package: fglm
 Type: Package
-Title: What the package does (short line)
+Title: Fit models for finitely supported data from a latent generalized linear model
 Version: 1.0
 Date: 2021-04-28
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Karl Oskar Ekvall
+Maintainer: Karl Oskar Ekvall <k.o.ekvall@gmail.com>
+Description: Minimize an elastic net-penalized negative log-likelihood for finitely supported data from a latent generalized linear model.
 Imports: Rcpp (>= 1.0.6)
 LinkingTo: Rcpp, RcppArmadillo
+License: MIT + file LICENSE
+RoxygenNote: 7.1.1
+Encoding: UTF-8

@@ -27,9 +27,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// obj_diff
-Rcpp::List obj_diff(const arma::vec& y, const arma::mat& X, const arma::vec& b, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order);
-RcppExport SEXP _fglm_obj_diff(SEXP ySEXP, SEXP XSEXP, SEXP bSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP orderSEXP) {
+// obj_diff_cpp
+Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order);
+RcppExport SEXP _fglm_obj_diff_cpp(SEXP ySEXP, SEXP XSEXP, SEXP bSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP orderSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,7 +40,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type lam1(lam1SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
     Rcpp::traits::input_parameter< const uint& >::type order(orderSEXP);
-    rcpp_result_gen = Rcpp::wrap(obj_diff(y, X, b, yupp, lam1, lam2, order));
+    rcpp_result_gen = Rcpp::wrap(obj_diff_cpp(y, X, b, yupp, lam1, lam2, order));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -90,7 +90,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_fglm_fista_ee", (DL_FUNC) &_fglm_fista_ee, 11},
-    {"_fglm_obj_diff", (DL_FUNC) &_fglm_obj_diff, 7},
+    {"_fglm_obj_diff_cpp", (DL_FUNC) &_fglm_obj_diff_cpp, 7},
     {"_fglm_soft_t", (DL_FUNC) &_fglm_soft_t, 2},
     {"_fglm_log1mexp", (DL_FUNC) &_fglm_log1mexp, 1},
     {"_fglm_prox_newt", (DL_FUNC) &_fglm_prox_newt, 10},

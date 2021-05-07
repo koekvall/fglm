@@ -13,7 +13,7 @@ double obj_fun_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta, cons
 Rcpp::List neg_ll_exp_cpp(arma::vec y, arma::mat X, arma::vec b, arma::vec yupp,
                           uint order, double const pen);
 
-Rcpp::List obj_diff(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
+Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
 arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order);
 
 #endif

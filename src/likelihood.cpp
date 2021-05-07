@@ -46,7 +46,7 @@ const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
 }
 
 // [[Rcpp::export]]
-Rcpp::List obj_diff(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
+Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
 arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order)
 {
   const uint p = X.n_cols;
