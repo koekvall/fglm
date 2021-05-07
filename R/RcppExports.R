@@ -5,12 +5,8 @@ fista_ee <- function(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc) {
     .Call(`_fglm_fista_ee`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
 }
 
-lik_ee <- function(y, yupp, eta, order) {
-    .Call(`_fglm_lik_ee`, y, yupp, eta, order)
-}
-
-obj_fun_ee <- function(y, yupp, eta, b, lam1, lam2) {
-    .Call(`_fglm_obj_fun_ee`, y, yupp, eta, b, lam1, lam2)
+obj_diff <- function(y, X, b, yupp, lam1, lam2, order) {
+    .Call(`_fglm_obj_diff`, y, X, b, yupp, lam1, lam2, order)
 }
 
 soft_t <- function(x, lam) {
@@ -19,5 +15,9 @@ soft_t <- function(x, lam) {
 
 log1mexp <- function(x) {
     .Call(`_fglm_log1mexp`, x)
+}
+
+prox_newt <- function(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch) {
+    .Call(`_fglm_prox_newt`, y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch)
 }
 
