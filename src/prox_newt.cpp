@@ -2,6 +2,8 @@
 #include "misc.h"
 #include "likelihood.h"
 
+// rk(ii) and hk(ii) are 1st and 2nd partial derivatives of log-likelihood with
+// respect to eta_i, evaluated at eta_k(ii)
 double quad_approx(const arma::vec& rk, const arma::vec& hk, const arma::vec& eta,
 const arma::vec& eta_k)
 {
@@ -21,7 +23,8 @@ lam2, const uint& maxit, const double& tol, const bool& verbose)
 
   // pre-compute terms not changing in coordinate descent iterations
   arma::vec numer_sum = arma::mean(X.each_col() % (rk - hk % eta), 0);
-  arma::vec denom_sum = arma::mean(arma::square(X.each_col() % arma::sqrt(hk)), 0);
+  arma::vec denom_sum = arma::mean(arma::diagmat(hk) * arma::square(X),
+  0);
 
   // start coordinate descent
   for(size_t ll = 0; ll < maxit; ++ll){
@@ -44,7 +47,8 @@ lam2, const uint& maxit, const double& tol, const bool& verbose)
     newt_obj -= quad_approx(rk, hk, eta, eta_jkl) + arma::sum(lam2 %
     arma::square(b)) + arma::sum(lam1 % arma::abs(b));
     if(verbose){
-      Rcpp::Rcout << "change from " << ll << ":th iteration: " << -newt_obj << "\n";
+      Rcpp::Rcout << "change from " << ll << ":th iteration: " << -newt_obj <<
+      "\n";
     }
 
     if(std::abs(newt_obj) < tol){
@@ -55,7 +59,45 @@ lam2, const uint& maxit, const double& tol, const bool& verbose)
       Rcpp::warning("Coordiante descent reached maxit");
     }
   }
-  return arma::join_vert(b, eta_jkl);
+  return b;
 }
 
-//Rcpp::List prox_newt()
+Rcpp::List prox_newt(const arma::vec& y, const arma::mat& X, const arma::vec& yupp,
+  const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const arma::uvec& maxit,
+  const arma::vec& tol, const bool& verbose, const bool& linsearch)
+{
+  const uint p = X.n_cols;
+  arma::vec eta = X * b;
+  double obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
+  double obj_new;
+  for(size_t kk = 0; kk < maxit(0); ++kk){
+    // Get proposed Newton step and corresponding eta
+    arma::vec b_bar = newton_step(y, X, b, eta, yupp, lam1, lam2, maxit(1),
+    tol(1), verbose);
+    // Linesearch
+    double scale = 1.0;
+    if(maxit(2) > 0){
+      arma::vec grad = -arma::mean(X.each_col() % lik_ee(y, yupp, eta, 1), 0);
+      grad += lam2 % b;
+
+      b_bar -= b; //replace by proposed direction
+      for(size_t iter = 0; iter < maxit(2); iter ++){ // linesearch
+        obj_new = obj_fun_ee(y, yupp, eta, b + scale * b_bar, lam1, lam2);
+        bool iterate = (obj_new > (obj + 0.25 * scale * arma::sum(b_bar % grad)
+        + 0.25 * arma::sum(lam1 % (arma::abs(b + scale * b_bar) -
+        arma::abs(b)))));
+        if(iterate){
+          scale *= 0.8;
+        } else{
+          break;
+        }
+        if(verbose && (iter == (maxit(2) - 1))){
+          Rcpp::warning("Linesearch reached maxit");
+        }
+      } // end linesearch iteration
+    } // end if linesearch
+    b += scale * b_bar;
+    obj = obj_new;
+  } // end Newton iteration
+  return Rcpp::List::create(Rcpp::Named("b") = b, Rcpp::Named("iter") = iter);
+}

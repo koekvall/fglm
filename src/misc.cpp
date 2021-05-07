@@ -1,3 +1,4 @@
+#include "misc.h"
 #include <RcppArmadillo.h>
 #include <cmath>
 #include <limits>
@@ -14,6 +15,8 @@ double soft_t(double x, const double& lam)
   return x;
 }
 
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
 arma::vec soft_t(arma::vec x, const arma::vec& lam)
 {
   for(size_t jj = 0; jj < x.n_elem; jj++) {

@@ -13,8 +13,8 @@ obj_fun_ee <- function(y, yupp, eta, b, lam1, lam2) {
     .Call(`_fglm_obj_fun_ee`, y, yupp, eta, b, lam1, lam2)
 }
 
-neg_ll_exp_cpp <- function(y, X, b, yupp, order, pen) {
-    .Call(`_fglm_neg_ll_exp_cpp`, y, X, b, yupp, order, pen)
+soft_t <- function(x, lam) {
+    .Call(`_fglm_soft_t`, x, lam)
 }
 
 log1mexp <- function(x) {

@@ -57,19 +57,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// neg_ll_exp_cpp
-Rcpp::List neg_ll_exp_cpp(arma::vec y, arma::mat X, arma::vec b, arma::vec yupp, uint order, double const pen);
-RcppExport SEXP _fglm_neg_ll_exp_cpp(SEXP ySEXP, SEXP XSEXP, SEXP bSEXP, SEXP yuppSEXP, SEXP orderSEXP, SEXP penSEXP) {
+// soft_t
+arma::vec soft_t(arma::vec x, const arma::vec& lam);
+RcppExport SEXP _fglm_soft_t(SEXP xSEXP, SEXP lamSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type yupp(yuppSEXP);
-    Rcpp::traits::input_parameter< uint >::type order(orderSEXP);
-    Rcpp::traits::input_parameter< double const >::type pen(penSEXP);
-    rcpp_result_gen = Rcpp::wrap(neg_ll_exp_cpp(y, X, b, yupp, order, pen));
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lam(lamSEXP);
+    rcpp_result_gen = Rcpp::wrap(soft_t(x, lam));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -89,7 +85,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fglm_fista_ee", (DL_FUNC) &_fglm_fista_ee, 11},
     {"_fglm_lik_ee", (DL_FUNC) &_fglm_lik_ee, 4},
     {"_fglm_obj_fun_ee", (DL_FUNC) &_fglm_obj_fun_ee, 6},
-    {"_fglm_neg_ll_exp_cpp", (DL_FUNC) &_fglm_neg_ll_exp_cpp, 6},
+    {"_fglm_soft_t", (DL_FUNC) &_fglm_soft_t, 2},
     {"_fglm_log1mexp", (DL_FUNC) &_fglm_log1mexp, 1},
     {NULL, NULL, 0}
 };
