@@ -17,7 +17,7 @@
 #'   floor(y / d) * d sets y to the nearest smaller multiple of d.
 #'
 #'   The upper endpoint of the observed interval is yupp = y + d, unless y =
-#'   y_max in which case yupp = Inf.
+#'   ymax in which case yupp = Inf.
 #'  }
 #'
 #' @export
