@@ -132,7 +132,7 @@ fit_ee <- function(y, yupp, X, lam = 1e-5, alpha = 0,
     is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < 1e-8)
     is_KKT <- all(abs(derivs[["sub_grad"]][zero_idx]) < (alpha * lam[ii] * pen_factor[zero_idx]))
     out[ii, p + 3] <- is_KKT
-    if(verbose & !is_KKT) warning("Zero is not in the sub-differential")
+    if(verbose & !is_KKT) warning("Zero may not be in the sub-differential")
   }
   return(out)
 }
