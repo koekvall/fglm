@@ -10,8 +10,8 @@ const arma::vec& eta_k)
   return arma::mean(rk % (eta - eta_k) + 0.5 * hk % arma::square(eta - eta_k));
 }
 
-arma::vec newton_step(const arma::vec& y, const arma::mat& X, arma::vec b,
-const arma::vec& eta, const arma::vec& yupp, const arma::vec& lam1, const arma::vec&
+arma::vec newton_step(const arma::vec& y, const arma::mat& X, arma::vec b, const
+arma::vec& eta, const arma::vec& yupp, const arma::vec& lam1, const arma::vec&
 lam2, const uint& maxit, const double& tol, const bool& verbose)
 {
   const uint p = X.n_cols;
@@ -35,7 +35,8 @@ lam2, const uint& maxit, const double& tol, const bool& verbose)
     // create "true" eta_jkl agreeing with paper notation
     eta_jkl -= X.col(0) * b(0);
     for(size_t jj = 0; jj < p; ++jj){
-      b(jj) = soft_t(numer_sum(jj) + arma::mean(hk % X.col(jj) % eta_jkl), lam1(jj));
+      b(jj) = soft_t(numer_sum(jj) + arma::mean(hk % X.col(jj) % eta_jkl),
+      lam1(jj));
       b(jj) *= 1.0 / (lam2(jj) - denom_sum(jj));
       // prepare to update next coordinate by updating eta_jkl
       eta_jkl += X.col(jj) * b(jj);
@@ -62,9 +63,10 @@ lam2, const uint& maxit, const double& tol, const bool& verbose)
   return b;
 }
 // [[Rcpp::export]]
-Rcpp::List prox_newt(const arma::vec& y, const arma::mat& X, const arma::vec& yupp,
-  const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const arma::uvec& maxit,
-  const arma::vec& tol, const bool& verbose, const bool& linsearch)
+Rcpp::List prox_newt(const arma::vec& y, const arma::mat& X, const arma::vec&
+yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const
+arma::uvec& maxit, const arma::vec& tol, const bool& verbose, const bool&
+linsearch)
 {
   uint iter;
   arma::vec eta = X * b;
@@ -83,10 +85,10 @@ Rcpp::List prox_newt(const arma::vec& y, const arma::mat& X, const arma::vec& yu
       b_bar -= b; //replace by proposed direction
       iter = 0;
       while(iter < maxit(1)){ // linesearch
-        obj_new = obj_fun_ee(y, yupp, X * (b + scale * b_bar), b + scale * b_bar, lam1, lam2);
-        bool iterate = (obj_new > (obj + 0.25 * scale * arma::sum(b_bar % grad)
-        + 0.25 * arma::sum(lam1 % (arma::abs(b + scale * b_bar) -
-        arma::abs(b)))));
+        obj_new = obj_fun_ee(y, yupp, X * (b + scale * b_bar), b + scale *
+        b_bar, lam1, lam2); bool iterate = (obj_new > (obj + 0.25 * scale *
+        arma::sum(b_bar % grad) + 0.25 * arma::sum(lam1 % (arma::abs(b + scale *
+        b_bar) - arma::abs(b)))));
         if(iterate){
           scale *= 0.8;
           if(verbose){

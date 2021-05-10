@@ -29,7 +29,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
   stopifnot(is.numeric(b), length(b) == p)
   stopifnot(is.numeric(d), length(d) == 1, d > 0)
   stopifnot(is.numeric(ymax), length(ymax) == 1, ymax >= 0)
-  
+
   eta <- X %*% b
   y <- stats::rexp(n = nrow(X), rate = exp(X %*% b))
   y <- floor(y / d) * d
@@ -42,7 +42,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #' Compute value and derivatives of an elastic net-penalized negative
 #' log-likelihood corresponding to a latent exponential generalized linear model
 #' with natural parameter exp(X b)
-#' 
+#'
 #' @param y A vector of n observed responses (see details in fit_ee)
 #' @param X An n x p matrix of predictors
 #' @param b A vector of p regression coefficients
@@ -55,11 +55,11 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #' @param order An integer where 0 means only value is computed; 1 means both value
 #'   and sub-gradient; and 2 means value, sub-gradient, and Hessian (see details)
 #' @return A list with elements "obj", "grad", and "hessian" (see details)
-#' 
+#'
 #' @details{
 #'  When order = 0, the gradient and Hessian elements of the return list are set
 #'  to all zeros, and similarly for the Hessian when order = 1.
-#'  
+#'
 #'  The sub-gradient returned is that obtained by taking the sub-gradient of the
 #'  absolute value to equal zero at zero. When no element of b is zero, this is
 #'  the usual gradient. The Hessian returns is that of the smooth part of the
@@ -68,7 +68,8 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #'  objective function
 #' }
 #' @export
-obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1, ncol(X) - 1)), order){
+obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1,
+  ncol(X) - 1)), order){
   # Do argument checking
   stopifnot(is.matrix(X))
   p <- ncol(X)
@@ -83,5 +84,6 @@ obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1,
             length(pen_factor) == p)
   stopifnot(is.numeric(order), length(order) == 1, order %in% 0:2)
 
-  obj_diff_cpp(y, X, b, yupp, lam1 = alpha * lam * pen_factor, lam2 = (1 - alpha) * lam * pen_factor, order)
+  obj_diff_cpp(y, X, b, yupp, lam1 = alpha * lam * pen_factor, lam2 = (1 -
+  alpha) * lam * pen_factor, order)
 }
