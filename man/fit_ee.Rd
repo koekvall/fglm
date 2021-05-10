@@ -29,12 +29,12 @@ fit_ee(
 \item{X}{A matrix of predictors whose i:th row corresponds to the i:th
 element in y.}
 
-\item{lam}{A vector of penalty parameters to fir the model for}
+\item{lam}{A vector of penalty parameters to fit the model for}
 
 \item{alpha}{A scalar weight for elastic net (1 = lasso, 0 = ridge)}
 
 \item{pen_factor}{A vector of coefficient-specific penalty weights; defaults
-to 0 for first element of b and 1 for the remaining.}
+to 0 for fitst element of b and 1 for the remaining.}
 
 \item{maxit}{A vector of maximum number of iterations (see details)}
 
