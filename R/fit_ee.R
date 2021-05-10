@@ -12,10 +12,10 @@
 #' (see details)
 #' @param X A matrix of predictors whose i:th row corresponds to the i:th
 #'   element in y.
-#' @param lam A vector of penalty parameters to fir the model for
+#' @param lam A vector of penalty parameters to fit the model for
 #' @param alpha A scalar weight for elastic net (1 = lasso, 0 = ridge)
 #' @param pen_factor A vector of coefficient-specific penalty weights; defaults
-#' to 0 for first element of b and 1 for the remaining.
+#' to 0 for fitst element of b and 1 for the remaining.
 #' @param maxit A vector of maximum number of iterations (see details)
 #' @param tol A vector of tolerances for FISTA or proximal Newton termination
 #' (see details)
