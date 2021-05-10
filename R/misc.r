@@ -1,5 +1,9 @@
-#' Generate discretized and truncated data from a latent exponential
+#' Generate data
+#'
+#'@description{
+#' The generated responses are discretized and truncated from a latent exponential
 #' generalized linear model with natural parameter exp(X b)
+#'  }
 #'
 #' @param X An n x p design matrix
 #' @param b A vector of p regression coefficients
@@ -39,9 +43,12 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
   return(cbind(y, yupp))
 }
 
-#' Compute value and derivatives of an elastic net-penalized negative
-#' log-likelihood corresponding to a latent exponential generalized linear model
-#' with natural parameter exp(X b)
+#' Evaluate objective function and its derivatives
+#'
+#' @description{The objective function is that of an elastic net-penalized negative
+#'  log-likelihood corresponding to a latent exponential generalized linear model
+#'  with natural parameter exp(X b).
+#' }
 #'
 #' @param y A vector of n observed responses (see details in fit_ee)
 #' @param X An n x p matrix of predictors

@@ -2,9 +2,7 @@
 % Please edit documentation in R/misc.r
 \name{obj_diff}
 \alias{obj_diff}
-\title{Compute value and derivatives of an elastic net-penalized negative
-log-likelihood corresponding to a latent exponential generalized linear model
-with natural parameter exp(X b)}
+\title{Evaluate objective function and its derivatives}
 \usage{
 obj_diff(
   y,
@@ -41,15 +39,16 @@ and sub-gradient; and 2 means value, sub-gradient, and Hessian (see details)}
 A list with elements "obj", "grad", and "hessian" (see details)
 }
 \description{
-Compute value and derivatives of an elastic net-penalized negative
-log-likelihood corresponding to a latent exponential generalized linear model
-with natural parameter exp(X b)
+{The objective function is that of an elastic net-penalized negative
+ log-likelihood corresponding to a latent exponential generalized linear model
+ with natural parameter exp(X b).
+}
 }
 \details{
 {
  When order = 0, the gradient and Hessian elements of the return list are set
  to all zeros, and similarly for the Hessian when order = 1.
- 
+
  The sub-gradient returned is that obtained by taking the sub-gradient of the
  absolute value to equal zero at zero. When no element of b is zero, this is
  the usual gradient. The Hessian returns is that of the smooth part of the

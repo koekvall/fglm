@@ -73,7 +73,7 @@ linsearch)
   double obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
   double obj_new;
   for(size_t kk = 0; kk < maxit(0); ++kk){
-    // Get proposed Newton step and corresponding eta
+    // Get proposed Newton step
     arma::vec b_bar = newton_step(y, X, b, eta, yupp, lam1, lam2, maxit(2),
     tol(1), verbose);
     // Linesearch
@@ -86,9 +86,10 @@ linsearch)
       iter = 0;
       while(iter < maxit(1)){ // linesearch
         obj_new = obj_fun_ee(y, yupp, X * (b + scale * b_bar), b + scale *
-        b_bar, lam1, lam2); bool iterate = (obj_new > (obj + 0.25 * scale *
-        arma::sum(b_bar % grad) + 0.25 * arma::sum(lam1 % (arma::abs(b + scale *
-        b_bar) - arma::abs(b)))));
+        b_bar, lam1, lam2);
+        bool iterate = (obj_new > (obj + 0.25 * scale * arma::sum(b_bar % grad)
+        + 0.25 * arma::sum(lam1 % (arma::abs(b + scale * b_bar) -
+        arma::abs(b)))));
         if(iterate){
           scale *= 0.8;
           if(verbose){

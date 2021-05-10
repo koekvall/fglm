@@ -2,8 +2,7 @@
 % Please edit documentation in R/misc.r
 \name{generate_ee}
 \alias{generate_ee}
-\title{Generate discretized and truncated data from a latent exponential
-generalized linear model with natural parameter exp(X b)}
+\title{Generate data}
 \usage{
 generate_ee(X, b, d = 1, ymax = 10)
 }
@@ -22,8 +21,10 @@ A matrix with n rows and 2 columns; the first is the lower endpoint
  of the observed interval and the second the upper endpoint (see details)
 }
 \description{
-Generate discretized and truncated data from a latent exponential
+{
+The generated responses are discretized and truncated from a latent exponential
 generalized linear model with natural parameter exp(X b)
+ }
 }
 \details{
 {
