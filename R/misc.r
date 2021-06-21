@@ -35,7 +35,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
   stopifnot(is.numeric(ymax), length(ymax) == 1, ymax >= 0)
 
   eta <- X %*% b
-  y <- stats::rexp(n = nrow(X), rate = exp(X %*% b))
+  y <- stats::rexp(n = nrow(X), rate = exp(eta))
   y <- floor(y / d) * d
   y <- pmin(y, ymax)
   yupp <- y + d

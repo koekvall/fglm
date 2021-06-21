@@ -127,10 +127,11 @@ fit_ee <- function(y, yupp, X, lam = 1e-5, alpha = 0,
 
     # Check if zero in sub-differential
     zero_idx <- b == 0
-    derivs <- obj_diff_cpp(y = y, X = X, b = b, yupp = yupp, lam1 = alpha * lam[ii] * pen_factor,
-                       lam2 = (1 - alpha) * lam[ii] * pen_factor, order = 1)
+    derivs <- obj_diff_cpp(y = y, X = X, b = b, yupp = yupp, lam1 = alpha *
+    lam[ii] * pen_factor, lam2 = (1 - alpha) * lam[ii] * pen_factor, order = 1)
     is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < 1e-8)
-    is_KKT <- all(abs(derivs[["sub_grad"]][zero_idx]) < (alpha * lam[ii] * pen_factor[zero_idx]))
+    is_KKT <- all(abs(derivs[["sub_grad"]][zero_idx]) < (alpha * lam[ii] *
+    pen_factor[zero_idx]))
     out[ii, p + 3] <- is_KKT
     if(verbose & !is_KKT) warning("Zero may not be in the sub-differential")
   }
