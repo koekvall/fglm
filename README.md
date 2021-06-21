@@ -1,2 +1,2 @@
-# Finitely supported data from latent generalized linear models
+# Finitely supported data from latent log-concave distributions
 
