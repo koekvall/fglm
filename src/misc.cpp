@@ -30,9 +30,9 @@ double log1mexp(double x)
   if(x <= 0.0){
     x = -std::numeric_limits<double>::infinity();
   } else if(x <= 0.693){
-    x =  std::log(-std::expm1(-x));
+    x =  std::log(-std::expm1(x));
   } else{
-    x = std::log1p(-std::exp(-x));
+    x = std::log1p(-std::exp(x));
   }
   return x;
 }
