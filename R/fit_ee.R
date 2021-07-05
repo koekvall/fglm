@@ -143,8 +143,7 @@ fit_ee <- function(y, yupp, X, lam = 1e-5, alpha = 0,
     is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
     is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <= (alpha * lam[ii] *
     pen_factor[zero_idx]))
-<<<<<<< HEAD
-    
+
     early <-  out[ii, p + 2] < maxit[1]
     
     if(is_KKT & early){
@@ -156,12 +155,6 @@ fit_ee <- function(y, yupp, X, lam = 1e-5, alpha = 0,
     } else{
       out[ii, p + 3] <- 3
     }
-    
-=======
-    # Use 0 to indicate convergence, for consistency with e.g. optim
->>>>>>> 7191f7a0d8cac8cb1d13e22066e58c0ead24d9a6
-    out[ii, p + 3] <- !is_KKT
-    if(verbose & !is_KKT) warning("Zero may not be in the sub-differential")
   }
   colnames(out) <- c(paste0("b", 1:p), "lam", "iter", "conv")
   return(out)
