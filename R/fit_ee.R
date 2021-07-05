@@ -27,10 +27,22 @@
 #' printed
 #' @param acc A logical indicating whether to use acceleration when the FISTA
 #' algorithm is used
-#' @return A matrix where each row correspond to a value of lam and the columns
-#' are coefficient estimates (1 - p), the value of lam (p + 1), the number of
-#' iterations required (p + 2), and whether zero is in the sub-differential at
-#' the final iterate (p + 3)
+#' @return {
+#'   A matrix where each row correspond to a value of lam and the columns
+#'   are coefficient estimates (1--p), the value of lam (p + 1), the number of
+#'   iterations required (p + 2), and a convergence diagnostic (p + 3).
+#' 
+#'   The convergence diagnostic can take values
+#'    
+#'   0 if maxit was not reached and 0 is a sub-gradient at the termination
+#'   point; the tolerance for this check is sqrt(tol[1]). 
+#'   
+#'   1 if maxit was reached but 0 is a sub-gradient.
+#'   
+#'   2 if maxit was reached and 0 is not a sub-gradient.
+#'   
+#'   3 maxit was not reached but 0 is not a sub-gradient.
+#' }
 #' @details{
 #'   The model assumes latent responses are generated from an exponential
 #'   generalized linear model with mean exp(-X b). The data are intervals in
@@ -41,7 +53,7 @@
 #'   maximum number of Newton iterations, the second is the maximum number of
 #'   line search iterations for each Newton update, and the third is the maximum
 #'   number of coordinate descent iterations within each Newton update. The
-#'   first elemen of tol is for terminating the Newton iterations and the second
+#'   first element of tol is for terminating the Newton iterations and the second
 #'   for terminating the coordinate descent updates within each Newton
 #'   iteration.
 #'
@@ -124,16 +136,29 @@ fit_ee <- function(y, yupp, X, lam = 1e-5, alpha = 0,
     } else{
       # Not reached, for future use
     }
-
     # Check if zero in sub-differential
     zero_idx <- b == 0
     derivs <- obj_diff_cpp(y = y, X = X, b = b, yupp = yupp, lam1 = alpha *
     lam[ii] * pen_factor, lam2 = (1 - alpha) * lam[ii] * pen_factor, order = 1)
-    is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < 1e-8)
-    is_KKT <- all(abs(derivs[["sub_grad"]][zero_idx]) < (alpha * lam[ii] *
+    is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
+    is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <= (alpha * lam[ii] *
     pen_factor[zero_idx]))
-    out[ii, p + 3] <- is_KKT
+    
+    early <-  out[ii, p + 2] < maxit[1]
+    
+    if(is_KKT & early){
+      out[ii, p + 3] <- 0
+    } else if(is_KKT & !early){
+      out[ii, p + 3] <- 1
+    } else if(!is_KKT & !early){
+      out[ii, p + 3] <- 2
+    } else{
+      out[ii, p + 3] <- 3
+    }
+    
+    out[ii, p + 3] <- !is_KKT
     if(verbose & !is_KKT) warning("Zero may not be in the sub-differential")
   }
+  colnames(out) <- c(paste0("b", 1:p), "lam", "iter", "conv")
   return(out)
 }

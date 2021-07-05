@@ -42,6 +42,7 @@ Rcpp::List fista_ee(const arma::vec& y, const arma::mat& X, const arma::vec& yup
 
       if(iter == (maxit - 1)){
         Rcpp::warning("maxit reached before convergence");
+        iter++;
         break;
       }
 
