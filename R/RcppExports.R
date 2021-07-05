@@ -5,8 +5,12 @@ fista_ee <- function(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc) {
     .Call(`_fglm_fista_ee`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
 }
 
-obj_diff_cpp <- function(y, X, b, yupp, lam1, lam2, order) {
-    .Call(`_fglm_obj_diff_cpp`, y, X, b, yupp, lam1, lam2, order)
+fista_norm <- function(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc) {
+    .Call(`_fglm_fista_norm`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
+}
+
+obj_diff_cpp <- function(y, X, b, yupp, lam1, lam2, order, prob_fun) {
+    .Call(`_fglm_obj_diff_cpp`, y, X, b, yupp, lam1, lam2, order, prob_fun)
 }
 
 soft_t <- function(x, lam) {

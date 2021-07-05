@@ -57,7 +57,7 @@ lam2, const uint& maxit, const double& tol, const bool& verbose)
     }
 
     if((ll == (maxit - 1)) & verbose){
-      Rcpp::warning("Coordiante descent reached maxit");
+      Rcpp::warning("Coordinate descent reached maxit");
     }
   }
   return b;

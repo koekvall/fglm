@@ -34,7 +34,7 @@ element in y.}
 \item{alpha}{A scalar weight for elastic net (1 = lasso, 0 = ridge)}
 
 \item{pen_factor}{A vector of coefficient-specific penalty weights; defaults
-to 0 for first element of b and 1 for the remaining.}
+to 0 for fitst element of b and 1 for the remaining.}
 
 \item{maxit}{A vector of maximum number of iterations (see details)}
 
@@ -55,22 +55,10 @@ printed}
 algorithm is used}
 }
 \value{
-{
-  A matrix where each row correspond to a value of lam and the columns
-  are coefficient estimates (1--p), the value of lam (p + 1), the number of
-  iterations required (p + 2), and a convergence diagnostic (p + 3).
-
-  The convergence diagnostic can take values
-   
-  0 if maxit was not reached and 0 is a sub-gradient at the termination
-  point; the tolerance for this check is sqrt(tol[1]). 
-  
-  1 if maxit was reached but 0 is a sub-gradient.
-  
-  2 if maxit was reached and 0 is not a sub-gradient.
-  
-  3 maxit was not reached but 0 is not a sub-gradient.
-}
+A matrix where each row correspond to a value of lam and the columns
+are coefficient estimates (1 - p), the value of lam (p + 1), the number of
+iterations required (p + 2), and whether zero is in the sub-differential at
+the final iterate (p + 3)
 }
 \description{
 {
@@ -91,7 +79,7 @@ algorithm is used}
   maximum number of Newton iterations, the second is the maximum number of
   line search iterations for each Newton update, and the third is the maximum
   number of coordinate descent iterations within each Newton update. The
-  first element of tol is for terminating the Newton iterations and the second
+  first elemen of tol is for terminating the Newton iterations and the second
   for terminating the coordinate descent updates within each Newton
   iteration.
 

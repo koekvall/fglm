@@ -20,7 +20,7 @@ double lik_ee(double y, const double& yupp, const double& eta, const uint& order
       double log_scale = 2.0 * eta - y * theta + 2.0 * std::log(y);
       log_scale -= 2.0 * log1mexp(y * theta);
       log_scale += std::log1p(std::exp(-eta - y * theta -
-      std::log(y)) - std::exp(-eta - std::log(y)));
+        std::log(y)) - std::exp(-eta - std::log(y)));
       out -= exp(log_scale);
     }
   }
@@ -28,7 +28,7 @@ double lik_ee(double y, const double& yupp, const double& eta, const uint& order
 }
 
 arma::vec lik_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const
-uint& order)
+                   uint& order)
 {
   for(uint ii = 0; ii < y.n_elem; ii++){
     y(ii) = lik_ee(y(ii), yupp(ii), eta(ii), order);
@@ -45,25 +45,76 @@ const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
   return obj;
 }
 
+double lik_norm(double y, const double& yupp, const double& eta,const uint& order)
+{
+  double out = 0;
+  if (order == 0){
+    out = std::log(arma::normcdf(yupp-eta)-arma::normcdf(y-eta));
+  }
+  else if(order == 1){
+    out = -(arma::normpdf(yupp-eta)-arma::normpdf(y-eta))/(arma::normcdf(yupp-eta)-arma::normcdf(y-eta));
+  }
+  return out;
+}
+
+arma::vec lik_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,const uint& order)
+{
+  for(uint ii = 0; ii < y.n_elem; ii++){
+    y(ii) = lik_norm(y(ii),yupp(ii), eta(ii),order);
+  }
+  return y;
+}
+
+double obj_fun_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,
+                  const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
+{
+  double obj = -arma::mean(lik_norm(y,yupp, eta,0));
+  obj += arma::sum(lam1 % arma::abs(b)) + 0.5 * arma::sum(lam2 %
+    arma::square(b));
+  return obj;
+}
+
 // [[Rcpp::export]]
 Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
-arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order)
+arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order, const std::string prob_fun)
 {
   const uint p = X.n_cols;
   arma::vec eta = X * b;
-  double obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
   arma::mat hess(p, p, arma::fill::zeros);
   arma::vec sub_grad(p, arma::fill::zeros);
+  arma::vec d_lik(p, arma::fill::zeros);
+  arma::vec dd_lik(p, arma::fill::zeros);
+  double obj;
+
+  
+  if (prob_fun == "ee"){
+      double obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
+      d_lik = lik_ee(y, yupp, eta, 1);
+      dd_lik = lik_ee(y, yupp, eta, 2);
+      //sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
+    }
+  
+  else if (prob_fun == "norm"){
+      double obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
+      d_lik = lik_norm(y, yupp, eta, 1);
+      dd_lik = lik_norm(y, yupp, eta, 2);
+      //sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
+    }
+ 
   if(order > 0){
-    //Rcpp::Rcout << -arma::mean(X.each_col() % lik_ee(y, yupp, eta, 1), 0) <<std::endl;
-    sub_grad = -arma::mean(X.each_col() % lik_ee(y, yupp, eta, 1), 0).t();
+    sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
     sub_grad += lam2 % b + lam1 % arma::sign(b);
+
   }
   if(order > 1){
-    hess = -X.t() * arma::diagmat(lik_ee(y, yupp, eta, 2) * (1.0 / X.n_rows)) * X;
+    hess = -X.t() * arma::diagmat(dd_lik * (1.0 / X.n_rows)) * X;
     hess.diag() += lam2;
   }
 
   return Rcpp::List::create(Rcpp::Named("obj") = obj, Rcpp::Named("sub_grad") =
   sub_grad, Rcpp::Named("hessian") = hess);
 }
+
+
+
+
