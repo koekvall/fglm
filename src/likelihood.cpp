@@ -48,12 +48,37 @@ const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
 double lik_norm(double y, const double& yupp, const double& eta,const uint& order)
 {
   double out = 0;
+  double pdf2 = 0;
+  double pdf1 = 0;
+  double cdf = 0;
+  const double infty = R_PosInf;
   if (order == 0){
     out = std::log(arma::normcdf(yupp-eta)-arma::normcdf(y-eta));
   }
   else if(order == 1){
     out = -(arma::normpdf(yupp-eta)-arma::normpdf(y-eta))/(arma::normcdf(yupp-eta)-arma::normcdf(y-eta));
   }
+  else if(order == 2){
+      if(yupp < R_PosInf and y > R_NegInf){
+          pdf2 = (yupp-eta)*arma::normpdf(yupp-eta) - (y-eta)*arma::normpdf(y-eta);
+          pdf1 = arma::normpdf(yupp-eta)-arma::normpdf(y-eta);
+          cdf = arma::normcdf(yupp-eta)-arma::normcdf(y-eta);
+        }
+      else if(y > R_NegInf){
+          pdf2 = 0-(y-eta)*arma::normpdf(y-eta);
+          pdf1 = 0-arma::normpdf(y-eta);
+          cdf = 1-arma::normcdf(y-eta);
+          Rcpp::Rcout<<arma::normcdf(y-eta)<<std::endl;
+        }
+      else{
+          pdf2 = 0-(y-eta)*arma::normpdf(y-eta);
+          pdf1 = 0-arma::normpdf(y-eta);
+          cdf = 0-arma::normcdf(y-eta);
+        }
+
+      out = (pdf2*cdf+pdf1*pdf1)/(cdf*cdf);
+      
+    }
   return out;
 }
 
@@ -91,14 +116,12 @@ arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order
       double obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
       d_lik = lik_ee(y, yupp, eta, 1);
       dd_lik = lik_ee(y, yupp, eta, 2);
-      //sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
     }
   
   else if (prob_fun == "norm"){
       double obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
       d_lik = lik_norm(y, yupp, eta, 1);
       dd_lik = lik_norm(y, yupp, eta, 2);
-      //sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
     }
  
   if(order > 0){

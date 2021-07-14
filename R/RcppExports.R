@@ -21,7 +21,7 @@ log1mexp <- function(x) {
     .Call(`_fglm_log1mexp`, x)
 }
 
-prox_newt <- function(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch) {
-    .Call(`_fglm_prox_newt`, y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch)
+prox_newt <- function(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, prob_fun) {
+    .Call(`_fglm_prox_newt`, y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, prob_fun)
 }
 

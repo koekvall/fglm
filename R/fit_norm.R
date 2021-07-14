@@ -115,7 +115,8 @@ fit_norm <- function(y, yupp, X, lam = 1e-5, alpha = 0,
                        maxit = maxit,
                        tol = tol,
                        verbose = verbose,
-                       linsearch = TRUE)
+                       linsearch = TRUE,
+                       prob_fun = "norm")
       b <- fit[["b"]]
       out[ii, ] <- c(b, lam[ii], fit[["iter"]], 0)
     } else{
@@ -125,7 +126,7 @@ fit_norm <- function(y, yupp, X, lam = 1e-5, alpha = 0,
     # Check if zero in sub-differential
     zero_idx <- b == 0
     derivs <- obj_diff_cpp(y = y, X = X, b = b, yupp = yupp, lam1 = alpha *
-                             lam[ii] * pen_factor, lam2 = (1 - alpha) * lam[ii] * pen_factor, order = 1,'norm')
+                             lam[ii] * pen_factor, lam2 = (1 - alpha) * lam[ii] * pen_factor, order = 1,"norm")
     is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
     is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <= (alpha * lam[ii] *
                                                                      pen_factor[zero_idx]))
