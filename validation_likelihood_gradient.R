@@ -2,9 +2,10 @@
 
 library(numDeriv)
 # Generate data
-#X <- matrix(rnorm(100),ncol=4)
-b <- c(1,1)
-X <- matrix(rnorm(4),ncol=2)
+p <- 4
+n <- 2000
+X <- matrix(rnorm(n*p),ncol=p)
+b <- matrix(1,nrow = p)
 Y <- generate_norm(X,b)
 y <- Y[,1]
 yupp <- Y[,2]
@@ -36,7 +37,7 @@ for (i in 1:nrow(Y)){
   }
   
   
-  hess <- function(x){X[i,]%*%t(X[i,])*as.vector((-pdf2(x)*cdf(x)-pdf1(x)^2)/cdf(x)^2)}
+  hess <- function(x){X[i,]%*%t(X[i,])*as.vector((-pdf2(x)*cdf(x)-pdf1(x)^2)/(cdf(x)^2))}
   diff_grad[i] <- norm(grad(likelihood_function,b)-gradient(b),type="2")
   diff_hess[i] <- norm(hessian(likelihood_function,b)-hess(b),type="F")
 }

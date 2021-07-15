@@ -68,16 +68,13 @@ double lik_norm(double y, const double& yupp, const double& eta,const uint& orde
           pdf2 = 0-(y-eta)*arma::normpdf(y-eta);
           pdf1 = 0-arma::normpdf(y-eta);
           cdf = 1-arma::normcdf(y-eta);
-          Rcpp::Rcout<<arma::normcdf(y-eta)<<std::endl;
         }
       else{
           pdf2 = 0-(y-eta)*arma::normpdf(y-eta);
           pdf1 = 0-arma::normpdf(y-eta);
           cdf = 0-arma::normcdf(y-eta);
         }
-
-      out = (pdf2*cdf+pdf1*pdf1)/(cdf*cdf);
-      
+      out = -(pdf2*cdf+pdf1*pdf1)/(cdf*cdf);
     }
   return out;
 }

@@ -80,7 +80,7 @@ generate_norm <- function(X, b, d = 1, ymax = 5){
   stopifnot(is.numeric(d), length(d) == 1, d > 0)
   stopifnot(is.numeric(ymax), length(ymax) == 1, ymax >= 0)
   eta <- X %*% b
-  y <- rnorm(n,mean = eta)
+  y <- rnorm(n,mean=eta)
   y <- floor(y / d)*d
   y <- pmin(y, ymax)
   y <- pmax(y, -ymax)

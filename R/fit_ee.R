@@ -147,7 +147,6 @@ fit_ee <- function(y, yupp, X, lam = 1e-5, alpha = 0,
     
     early <-  out[ii, p + 2] < maxit[1]
     
-    
     if(is_KKT & early){
       out[ii, p + 3] <- 0
     } else if(is_KKT & !early){
