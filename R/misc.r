@@ -69,8 +69,8 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #'
 #'  The sub-gradient returned is that obtained by taking the sub-gradient of the
 #'  absolute value to equal zero at zero. When no element of b is zero, this is
-#'  the usual gradient. The Hessian returns is that of the smooth part of the
-#'  objective function that is, the average negative log-likelihood plus the L2
+#'  the usual gradient. The Hessian returned is that of the smooth part of the
+#'  objective function; that is, the average negative log-likelihood plus the L2
 #'  penalty only. When no element of b is zero, this is the Hessian of the
 #'  objective function
 #' }
