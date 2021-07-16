@@ -1,3 +1,5 @@
+#' Fit model with latent normal with identity link
+#' 
 #' @description{
 #'   Minimizes an elastic net-penalized negative log-likelihood for finitely
 #'   supported data from a standard normal generalized linear model.
@@ -57,7 +59,7 @@ fit_norm <- function(y, yupp, X, lam = 1e-5, alpha = 0,
   p <- ncol(X)
   n <- nrow(X)
   stopifnot(is.numeric(y), is.null(dim(y)), length(y) == n)
-  print(is.null(dim(yupp)))
+  stopifnot(is.null(dim(yupp)))
   stopifnot(is.numeric(yupp), is.null(dim(yupp)), length(yupp) == n)
   stopifnot(is.numeric(lam), is.null(dim(lam)))
   n_lam <- length(lam)

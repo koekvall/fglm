@@ -81,11 +81,10 @@ linsearch,const std::string prob_fun)
   arma::vec eta = X * b;
   double obj;
   if(prob_fun == "ee"){
-    double obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
-
+    obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
     }
   else if(prob_fun == "norm"){
-    double obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
+    obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
     }
   double obj_new;
 
