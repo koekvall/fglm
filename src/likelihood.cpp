@@ -45,36 +45,43 @@ const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
   return obj;
 }
 
-double lik_norm(double y, const double& yupp, const double& eta,const uint& order)
+double lik_norm(double y, double yupp, const double& eta,const uint& order)
 {
   double out = 0;
   double pdf2 = 0;
   double pdf1 = 0;
   double cdf = 0;
   const double infty = R_PosInf;
+  
+  // Center data
+  y -= eta;
+  yupp -= eta;
+  double ma = std::max(std::abs(y), std::abs(yupp));
+  
   if (order == 0){
-    out = std::log(arma::normcdf(yupp-eta)-arma::normcdf(y-eta));
+    out = std::log(arma::normcdf(yupp) - arma::normcdf(y));
   }
   else if(order == 1){
-    out = -(arma::normpdf(yupp-eta)-arma::normpdf(y-eta))/(arma::normcdf(yupp-eta)-arma::normcdf(y-eta));
+    out = -(arma::normpdf(yupp) - arma::normpdf(y))/
+      (arma::normcdf(yupp) - arma::normcdf(y));
   }
   else if(order == 2){
       if(yupp < R_PosInf and y > R_NegInf){
-          pdf2 = (yupp-eta)*arma::normpdf(yupp-eta) - (y-eta)*arma::normpdf(y-eta);
-          pdf1 = arma::normpdf(yupp-eta)-arma::normpdf(y-eta);
-          cdf = arma::normcdf(yupp-eta)-arma::normcdf(y-eta);
+          pdf2 = yupp * arma::normpdf(yupp) - y * arma::normpdf(y);
+          pdf1 = arma::normpdf(yupp) - arma::normpdf(y);
+          cdf = arma::normcdf(yupp) - arma::normcdf(y);
         }
       else if(y > R_NegInf){
-          pdf2 = 0-(y-eta)*arma::normpdf(y-eta);
-          pdf1 = 0-arma::normpdf(y-eta);
-          cdf = 1-arma::normcdf(y-eta);
+          pdf2 = -y * arma::normpdf(y);
+          pdf1 = -arma::normpdf(y);
+          cdf = 1.0 - arma::normcdf(y);
         }
       else{
-          pdf2 = 0-(y-eta)*arma::normpdf(y-eta);
-          pdf1 = 0-arma::normpdf(y-eta);
-          cdf = 0-arma::normcdf(y-eta);
+          pdf2 = -y * arma::normpdf(y);
+          pdf1 = -arma::normpdf(y);
+          cdf = -arma::normcdf(y);
         }
-      out = -(pdf2*cdf+pdf1*pdf1)/(cdf*cdf);
+      out = -(pdf2 * cdf + pdf1 * pdf1) / (cdf * cdf);
     }
   return out;
 }

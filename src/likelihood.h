@@ -7,7 +7,7 @@ double lik_ee(double y, const double& yupp, const double& eta, const uint& order
 arma::vec lik_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const
 uint& order);
 
-double lik_norm(double y, const arma::vec& yupp, const double& eta, const uint& order);
+double lik_norm(double y, double yupp, const double& eta, const uint& order);
 
 arma::vec lik_norm(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const
                    uint& order);
