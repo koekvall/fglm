@@ -3,6 +3,14 @@
 #include <cmath>
 #include <limits>
 #include <RcppArmadillo.h>
+#include "normal.h"
+
+// The log-likelihood for one observation is log[R(yupp - eta) - R(y - eta)],
+// where eta = x'beta and R is the CDF of the latent variable.
+// The extreme value CDF is R(t) = exp(-exp(-t)).
+
+// All likelihood derivatives are with respect to eta.
+
 
 double lik_ee(double y, const double& yupp, const double& eta, const uint& order)
 {
@@ -45,51 +53,49 @@ const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
   return obj;
 }
 
+arma::vec norm_logpdf_d(const double& x)
+{
+  // Computes logarithm of absolute value of derivative of standard normal
+  //density. The second element of out is the sign of that derivative, so
+  // out(1) * exp(out(0)) = -x exp(-x^2/2) / sqrt(2 pi)
+  arma::vec out(2);
+  out(1) = arma::sign(-x);
+  out(0) = std::log(std::abs(x)) + norm_logpdf(x);
+  return out;
+}
+
 double lik_norm(double y, double yupp, const double& eta,const uint& order)
 {
-  double out = 0;
-  double pdf2 = 0;
-  double pdf1 = 0;
-  double cdf = 0;
-  const double infty = R_PosInf;
-  
   // Center data
   y -= eta;
   yupp -= eta;
-  double ma = std::max(std::abs(y), std::abs(yupp));
   
-  if (order == 0){
-    out = std::log(arma::normcdf(yupp) - arma::normcdf(y));
-  }
-  else if(order == 1){
-    out = -(arma::normpdf(yupp) - arma::normpdf(y))/
-      (arma::normcdf(yupp) - arma::normcdf(y));
-  }
-  else if(order == 2){
-      if(yupp < R_PosInf and y > R_NegInf){
-          pdf2 = yupp * arma::normpdf(yupp) - y * arma::normpdf(y);
-          pdf1 = arma::normpdf(yupp) - arma::normpdf(y);
-          cdf = arma::normcdf(yupp) - arma::normcdf(y);
-        }
-      else if(y > R_NegInf){
-          pdf2 = -y * arma::normpdf(y);
-          pdf1 = -arma::normpdf(y);
-          cdf = 1.0 - arma::normcdf(y);
-        }
-      else{
-          pdf2 = -y * arma::normpdf(y);
-          pdf1 = -arma::normpdf(y);
-          cdf = -arma::normcdf(y);
-        }
-      out = -(pdf2 * cdf + pdf1 * pdf1) / (cdf * cdf);
+  // Compute stably on log-scale
+  double logcdf = norm_logcdf(yupp) + log1mexp(norm_logcdf(yupp) - norm_logcdf(y));
+  double out = logcdf;
+  if(order >= 1){
+    double pdf1 = norm_logpdf(yupp);
+    double pdf2 = norm_logpdf(y);
+    if(pdf1 >= pdf2){
+      out = -std::exp(-logcdf + pdf1 + log1mexp(pdf1 - pdf2));
+    } else{
+      out = std::exp(-logcdf + pdf2 + log1mexp(pdf2 - pdf1));
     }
+  } 
+  if(order == 2){
+      out = (-out) * out;
+      arma::vec dpdf1 = norm_logpdf_d(yupp);
+      arma::vec dpdf2 = norm_logpdf_d(y);
+      out += dpdf1(1) * std::exp(dpdf1(0) - logcdf);
+      out -= dpdf2(1) * std::exp(dpdf2(0) - logcdf);
+  }
   return out;
 }
 
 arma::vec lik_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,const uint& order)
 {
   for(uint ii = 0; ii < y.n_elem; ii++){
-    y(ii) = lik_norm(y(ii),yupp(ii), eta(ii),order);
+    y(ii) = lik_norm(y(ii), yupp(ii), eta(ii), order);
   }
   return y;
 }
@@ -97,7 +103,7 @@ arma::vec lik_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,const
 double obj_fun_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,
                   const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
 {
-  double obj = -arma::mean(lik_norm(y,yupp, eta,0));
+  double obj = -arma::mean(lik_norm(y, yupp, eta, 0));
   obj += arma::sum(lam1 % arma::abs(b)) + 0.5 * arma::sum(lam2 %
     arma::square(b));
   return obj;
@@ -105,7 +111,7 @@ double obj_fun_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,
 
 // [[Rcpp::export]]
 Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
-arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order, const std::string prob_fun)
+arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order, const std::string dist)
 {
   const uint p = X.n_cols;
   arma::vec eta = X * b;
@@ -115,29 +121,34 @@ arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order
   arma::vec dd_lik(p, arma::fill::zeros);
   double obj;
 
-  
-  if (prob_fun == "ee"){
-      double obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
+  if (dist == "ee"){
+      obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
+    if(order > 0){
       d_lik = lik_ee(y, yupp, eta, 1);
+      sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
+      sub_grad += lam2 % b + lam1 % arma::sign(b);
+    }
+    if(order > 1){
       dd_lik = lik_ee(y, yupp, eta, 2);
+      hess = -X.t() * arma::diagmat(dd_lik * (1.0 / X.n_rows)) * X;
+      hess.diag() += lam2;
     }
-  
-  else if (prob_fun == "norm"){
-      double obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
+  } else if (dist == "norm"){
+    obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
+    if(order > 0){
       d_lik = lik_norm(y, yupp, eta, 1);
-      dd_lik = lik_norm(y, yupp, eta, 2);
+      sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
+      sub_grad += lam2 % b + lam1 % arma::sign(b);
     }
- 
-  if(order > 0){
-    sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
-    sub_grad += lam2 % b + lam1 % arma::sign(b);
-
+    if(order > 1){
+      dd_lik = lik_norm(y, yupp, eta, 2);
+      hess = -X.t() * arma::diagmat(dd_lik * (1.0 / X.n_rows)) * X;
+      hess.diag() += lam2;
+    }
+  } else{
+    // Add other dists here
   }
-  if(order > 1){
-    hess = -X.t() * arma::diagmat(dd_lik * (1.0 / X.n_rows)) * X;
-    hess.diag() += lam2;
-  }
-
+  
   return Rcpp::List::create(Rcpp::Named("obj") = obj, Rcpp::Named("sub_grad") =
   sub_grad, Rcpp::Named("hessian") = hess);
 }

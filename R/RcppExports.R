@@ -9,8 +9,8 @@ fista_norm <- function(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc) {
     .Call(`_fglm_fista_norm`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
 }
 
-obj_diff_cpp <- function(y, X, b, yupp, lam1, lam2, order, prob_fun) {
-    .Call(`_fglm_obj_diff_cpp`, y, X, b, yupp, lam1, lam2, order, prob_fun)
+obj_diff_cpp <- function(y, X, b, yupp, lam1, lam2, order, dist) {
+    .Call(`_fglm_obj_diff_cpp`, y, X, b, yupp, lam1, lam2, order, dist)
 }
 
 soft_t <- function(x, lam) {
@@ -21,7 +21,7 @@ log1mexp <- function(x) {
     .Call(`_fglm_log1mexp`, x)
 }
 
-prox_newt <- function(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, prob_fun) {
-    .Call(`_fglm_prox_newt`, y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, prob_fun)
+prox_newt <- function(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, dist) {
+    .Call(`_fglm_prox_newt`, y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, dist)
 }
 
