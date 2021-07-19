@@ -1,8 +1,7 @@
 /*
- 
  File from https://github.com/horta/normal used and modified under the
  following MIT license.
- 
+
  MIT License
  
  Copyright (c) 2016 Danilo Horta
