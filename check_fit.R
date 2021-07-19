@@ -23,7 +23,7 @@ cat("\n \n")
 # Fit extreme value model (Exponential with log-link)
 
 ee_fit_prox <- fit_ee(Y_ee[,1], Y_ee[,2], X, method = "prox_newt",
-                      lam = 0, alpha = 0.5)
+                      lam = 0)
 ee_fit_fista <- fit_ee(Y_ee[,1], Y_ee[,2], X, method = "fista", L = 10, lam = 0,
                        maxit = 1e4)
 cat("Table 2: Exponential model w/o penalty \n")
@@ -37,7 +37,7 @@ norm_fit_prox <- fit_norm(Y_norm[, 1], Y_norm[, 2], X, method = "prox_newt",
                           lam = 1e-2, alpha = 0.5)
 
 norm_fit_fista <- fit_norm(Y_norm[,1], Y_norm[,2], X, method = "fista", L = 10,
-                           maxit = 1e4, lam = 1e-2, 0.5)
+                           maxit = 1e4, lam = 1e-2, alpha = 0.5)
 cat("Table 3: Normal model w elastic net penalty \n")
 print(rbind("true beta" = b,
             "prox_newt" = norm_fit_prox[1, 1:p],

@@ -50,7 +50,7 @@ Rcpp::List fista_ee(const arma::vec& y, const arma::mat& X, const arma::vec& yup
       b_old = b;
 
       if(acc){
-        t_new = 0.5 * (1.0 + std::sqrt(1.0 + 4 * (t_old * t_old)));
+        t_new = 0.5 * (1.0 + std::sqrt(1.0 + 4.0 * t_old * t_old));
         b_bar = b + (1.0 / t_new) * (t_old - 1.0) * (b - b_old);
       } else{
         b_bar = b;
@@ -109,7 +109,7 @@ Rcpp::List fista_norm(const arma::vec& y, const arma::mat& X, const arma::vec& y
     b_old = b;
     
     if(acc){
-      t_new = 0.5 * (1.0 + std::sqrt(1.0 + 4 * (t_old * t_old)));
+      t_new = 0.5 * (1.0 + std::sqrt(1.0 + 4.0 * t_old * t_old));
       b_bar = b + (1.0 / t_new) * (t_old - 1.0) * (b - b_old);
     } else{
       b_bar = b;

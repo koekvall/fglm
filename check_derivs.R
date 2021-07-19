@@ -13,8 +13,6 @@ lam_test <- 1
 alpha_test <- 0.5
 pen_test <- runif(p)
 
-
-
 # Latent normal
 Y <- generate_norm(X , b)
 obj <- function(theta)fglm::obj_diff(y = Y[, 1], X = X, b = theta, yupp = Y[, 2],
