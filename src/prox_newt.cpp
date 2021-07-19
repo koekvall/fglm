@@ -12,20 +12,20 @@ const arma::vec& eta_k)
 
 arma::vec newton_step(const arma::vec& y, const arma::mat& X, arma::vec b, const
 arma::vec& eta, const arma::vec& yupp, const arma::vec& lam1, const arma::vec&
-lam2, const uint& maxit, const double& tol, const bool& verbose,const std::string prob_fun)
+lam2, const uint& maxit, const double& tol, const bool& verbose, const std::string& dist)
 {
   const uint p = X.n_cols;
   const uint n = X.n_rows;
   arma::vec rk(n,arma::fill::zeros);
   arma::vec hk(n,arma::fill::zeros);
-  if(prob_fun == "ee"){
+  if(dist == "ee"){
     rk = lik_ee(y, yupp, eta, 1);
     hk = lik_ee(y, yupp, eta, 2);
     }
 
-  if(prob_fun == "norm"){
-    rk = lik_norm(y, yupp, eta, 1);
-    hk = lik_norm(y, yupp, eta, 2);
+  if(dist == "norm"){ //  thesese are derivatives wrt eta, not (e.g.) y_u - x'beta
+    rk = -lik_norm(y, yupp, eta, 1);
+    hk = -lik_norm(y, yupp, eta, 2);
   }
   // only term changing in coordinate descent iterations
   arma::vec eta_jkl = eta;
@@ -75,15 +75,15 @@ lam2, const uint& maxit, const double& tol, const bool& verbose,const std::strin
 Rcpp::List prox_newt(const arma::vec& y, const arma::mat& X, const arma::vec&
 yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const
 arma::uvec& maxit, const arma::vec& tol, const bool& verbose, const bool&
-linsearch,const std::string prob_fun)
+linsearch,const std::string dist)
 {
   uint iter;
   arma::vec eta = X * b;
   double obj;
-  if(prob_fun == "ee"){
+  if(dist == "ee"){
     obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
     }
-  else if(prob_fun == "norm"){
+  else if(dist == "norm"){
     obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
     }
   double obj_new;
@@ -91,27 +91,27 @@ linsearch,const std::string prob_fun)
   for(size_t kk = 0; kk < maxit(0); ++kk){
     // Get proposed Newton step
     arma::vec b_bar = newton_step(y, X, b, eta, yupp, lam1, lam2, maxit(2),
-    tol(1), verbose, prob_fun);
+    tol(1), verbose, dist);
     // Linesearch
     double scale = 1.0;
     arma::vec grad(X.n_cols,arma::fill::zeros);
     if(maxit(1) > 0){
-      if(prob_fun == "ee"){
+      if(dist == "ee"){
           arma::vec grad = -arma::mean(X.each_col() % lik_ee(y, yupp, eta, 1), 0).t();
         }
-      else if(prob_fun == "norm"){
-          arma::vec grad = -arma::mean(X.each_col() % lik_norm(y, yupp, eta, 1), 0).t();
+      else if(dist == "norm"){
+          arma::vec grad = arma::mean(X.each_col() % lik_norm(y, yupp, eta, 1), 0).t();
         }
     grad += lam2 % b;
 
       b_bar -= b; //replace by proposed direction
       iter = 0;
       while(iter < maxit(1)){ // linesearch
-        if(prob_fun == "ee"){
+        if(dist == "ee"){
           obj_new = obj_fun_ee(y, yupp, X * (b + scale * b_bar), b + scale *
             b_bar, lam1, lam2);
           }
-        else if(prob_fun == "norm"){
+        else if(dist == "norm"){
           obj_new = obj_fun_norm(y, yupp, X * (b + scale * b_bar), b + scale *
             b_bar, lam1, lam2);
           }
@@ -135,10 +135,10 @@ linsearch,const std::string prob_fun)
     // update and check if converged
     b += scale * b_bar;
     eta = X * b;
-    if(prob_fun=="ee"){
+    if(dist=="ee"){
       obj_new = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
       }
-    else if(prob_fun=="norm"){
+    else if(dist=="norm"){
       obj_new = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
     }
     if(abs(obj - obj_new) < tol(0)){

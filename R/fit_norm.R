@@ -89,7 +89,6 @@ fit_norm <- function(y, yupp, X, lam = 1e-5, alpha = 0,
   stopifnot(is.numeric(b), length(b) == p)
   stopifnot(is.logical(verbose), length(verbose) == 1)
   
-  
   out <- matrix(0, nrow = n_lam, ncol = p + 3)
   colnames(out) <- c(paste0(b, 1:p), "lam", "iter", "found min")
   for(ii in 1:n_lam){
@@ -118,7 +117,7 @@ fit_norm <- function(y, yupp, X, lam = 1e-5, alpha = 0,
                        tol = tol,
                        verbose = verbose,
                        linsearch = TRUE,
-                       prob_fun = "norm")
+                       dist = "norm")
       b <- fit[["b"]]
       out[ii, ] <- c(b, lam[ii], fit[["iter"]], 0)
     } else{

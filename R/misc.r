@@ -109,6 +109,8 @@ generate_norm <- function(X, b, d = 1, ymax = 5){
 #' to 0 for first element of b and 1 for the remaining.
 #' @param order An integer where 0 means only value is computed; 1 means both value
 #'   and sub-gradient; and 2 means value, sub-gradient, and Hessian (see details)
+#' @param dist String indicating which distribution to use, currently supports
+#'  Exponential with log-link ("ee") and normal with identity link ("norm")
 #' @return A list with elements "obj", "grad", and "hessian" (see details)
 #'
 #' @details{
@@ -124,7 +126,7 @@ generate_norm <- function(X, b, d = 1, ymax = 5){
 #' }
 #' @export
 obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1,
-  ncol(X) - 1)), order){
+  ncol(X) - 1)), order, dist){
   # Do argument checking
   stopifnot(is.matrix(X))
   p <- ncol(X)
@@ -138,7 +140,8 @@ obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1,
   stopifnot(is.numeric(pen_factor), is.null(dim(pen_factor)),
             length(pen_factor) == p)
   stopifnot(is.numeric(order), length(order) == 1, order %in% 0:2)
+  stopifnot(is.character(dist), length(dist) == 1, dist %in% c("ee", "norm"))
 
   obj_diff_cpp(y, X, b, yupp, lam1 = alpha * lam * pen_factor, lam2 = (1 -
-  alpha) * lam * pen_factor, order)
+  alpha) * lam * pen_factor, order, dist)
 }
