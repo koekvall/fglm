@@ -1,6 +1,6 @@
 # Calculates difference between numderiv gradient/hessian and explicit gradient/hessian expression of the likelihood function
 set.seed(3)
-library(numDeriv)
+library(numDeriv, fglm)
 # Generate data
 p <- 4
 n <- 20

@@ -1,4 +1,5 @@
 # Example test of main functions
+library(fglm)
 set.seed(3)
 # Generate data
 n <- 1000
@@ -36,7 +37,7 @@ cat("\n \n")
 norm_fit_prox <- fit_norm(Y_norm[, 1], Y_norm[, 2], X, method = "prox_newt",
                           lam = 1e-2, alpha = 0.5)
 
-norm_fit_fista <- fit_norm(Y_norm[,1], Y_norm[,2], X, method = "fista", L = 10,
+norm_fit_fista <- fit_norm(Y_norm[, 1], Y_norm[, 2], X, method = "fista", L = 10,
                            maxit = 1e4, lam = 1e-2, alpha = 0.5)
 cat("Table 3: Normal model w elastic net penalty \n")
 print(rbind("true beta" = b,

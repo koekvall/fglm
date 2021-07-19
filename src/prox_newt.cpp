@@ -23,9 +23,9 @@ lam2, const uint& maxit, const double& tol, const bool& verbose, const std::stri
     hk = lik_ee(y, yupp, eta, 2);
     }
 
-  if(dist == "norm"){ //  thesese are derivatives wrt eta, not (e.g.) y_u - x'beta
-    rk = -lik_norm(y, yupp, eta, 1);
-    hk = -lik_norm(y, yupp, eta, 2);
+  if(dist == "norm"){ //  these are derivatives wrt eta, not (e.g.) y_u - x'beta
+    rk = lik_norm(y, yupp, eta, 1);
+    hk = lik_norm(y, yupp, eta, 2);
   }
   // only term changing in coordinate descent iterations
   arma::vec eta_jkl = eta;
@@ -34,10 +34,11 @@ lam2, const uint& maxit, const double& tol, const bool& verbose, const std::stri
   arma::vec numer_sum = arma::mean(X.each_col() % (rk - hk % eta), 0).t();
   arma::vec denom_sum = arma::mean(arma::diagmat(hk) * arma::square(X),
   0).t();
+
   // start coordinate descent
   for(size_t ll = 0; ll < maxit; ++ll){
     // here, eta_jkl stores current eta. Compute current penalized quadratic value
-    double newt_obj = quad_approx(rk, hk, eta, eta_jkl) + arma::sum(lam2 %
+    double newt_obj = quad_approx(rk, hk, eta, eta_jkl) + 0.5 * arma::sum(lam2 %
     arma::square(b)) + arma::sum(lam1 % arma::abs(b));
 
     // create "true" eta_jkl agreeing with paper notation
@@ -54,7 +55,7 @@ lam2, const uint& maxit, const double& tol, const bool& verbose, const std::stri
       }
     }
     // calculate difference in penalized quadratic after one pass
-    newt_obj -= quad_approx(rk, hk, eta, eta_jkl) + arma::sum(lam2 %
+    newt_obj -= quad_approx(rk, hk, eta, eta_jkl) + 0.5 * arma::sum(lam2 %
     arma::square(b)) + arma::sum(lam1 % arma::abs(b));
     // if(verbose){
     //   Rcpp::Rcout << "change from " << ll << ":th iteration: " << -newt_obj <<
@@ -94,15 +95,15 @@ linsearch,const std::string dist)
     tol(1), verbose, dist);
     // Linesearch
     double scale = 1.0;
-    arma::vec grad(X.n_cols,arma::fill::zeros);
+    arma::vec grad(X.n_cols);
     if(maxit(1) > 0){
       if(dist == "ee"){
-          arma::vec grad = -arma::mean(X.each_col() % lik_ee(y, yupp, eta, 1), 0).t();
+          grad = -arma::mean(X.each_col() % lik_ee(y, yupp, eta, 1), 0).t();
         }
       else if(dist == "norm"){
-          arma::vec grad = arma::mean(X.each_col() % lik_norm(y, yupp, eta, 1), 0).t();
+          grad = arma::mean(X.each_col() % lik_norm(y, yupp, eta, 1), 0).t();
         }
-    grad += lam2 % b;
+     grad += lam2 % b;
 
       b_bar -= b; //replace by proposed direction
       iter = 0;

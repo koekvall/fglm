@@ -123,7 +123,6 @@ fit_norm <- function(y, yupp, X, lam = 1e-5, alpha = 0,
     } else{
       # Not reached, for future use
     }
-    
     # Check if zero in sub-differential
     zero_idx <- b == 0
     derivs <- obj_diff_cpp(y = y, X = X, b = b, yupp = yupp, lam1 = alpha *
