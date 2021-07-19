@@ -142,7 +142,7 @@ linsearch,const std::string dist)
     }
     
     if(abs(obj - obj_new) < tol(0)){
-      iter = kk;
+      iter = kk + 1;
       break;
     }
     obj = obj_new;
