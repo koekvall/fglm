@@ -23,7 +23,7 @@ lam2, const uint& maxit, const double& tol, const bool& verbose, const std::stri
     hk = lik_ee(y, yupp, eta, 2);
     }
 
-  if(dist == "norm"){ //  these are derivatives wrt eta, not (e.g.) y_u - x'beta
+  if(dist == "norm"){
     rk = lik_norm(y, yupp, eta, 1);
     hk = lik_norm(y, yupp, eta, 2);
   }
@@ -57,11 +57,7 @@ lam2, const uint& maxit, const double& tol, const bool& verbose, const std::stri
     // calculate difference in penalized quadratic after one pass
     newt_obj -= quad_approx(rk, hk, eta, eta_jkl) + 0.5 * arma::sum(lam2 %
     arma::square(b)) + arma::sum(lam1 % arma::abs(b));
-    // if(verbose){
-    //   Rcpp::Rcout << "change from " << ll << ":th iteration: " << -newt_obj <<
-    //   "\n";
-    // }
-
+    
     if(std::abs(newt_obj) < tol){
       break;
     }
@@ -121,9 +117,6 @@ linsearch,const std::string dist)
         arma::abs(b)))));
         if(iterate){
           scale *= 0.8;
-          if(verbose){
-            Rcpp::Rcout << "Scale is: " << scale << std::endl;
-          }
         } else{
           break;
         }
@@ -142,6 +135,12 @@ linsearch,const std::string dist)
     else if(dist=="norm"){
       obj_new = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
     }
+    
+    if(verbose){
+      Rcpp::Rcout << "Change in objective from iteration " << kk + 1 <<
+        ": " << obj_new - obj << std::endl;
+    }
+    
     if(abs(obj - obj_new) < tol(0)){
       iter = kk;
       break;
