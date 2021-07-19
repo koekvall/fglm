@@ -64,7 +64,7 @@ arma::vec norm_logpdf_d(const double& x)
   return out;
 }
 
-double lik_norm(double y, double yupp, const double& eta,const uint& order)
+double lik_norm(double y, double yupp, const double& eta, const uint& order)
 {
   // Center data
   y -= eta;
