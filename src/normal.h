@@ -14,15 +14,15 @@
 
 /* Cumulative distribution function of the Normal distribution.
  */
-static double cdf(double x);
+static double norm_cdf(double x);
 
 /* Log of the cumulative distribution function of the Normal distribution.
  */
-static double logcdf(double x);
+static double norm_logcdf(double x);
 
 /* Log of the probability distribution function of the Normal distribution.
  */
-inline static double logpdf(double x)
+inline static double norm_logpdf(double x)
 {
     return - (x*x)/2 - LOG2PI_2;
 }
@@ -206,7 +206,7 @@ gauss_large (const double x)
   return result;
 }
 
-static double cdf(const double x)
+static double norm_cdf(const double x)
 {
   double result;
   double absx = fabs (x);
@@ -255,7 +255,7 @@ static double cdf(const double x)
   return result;
 }
 
-static double logcdf(double a)
+static double norm_logcdf(double a)
 {
     /* we compute the left hand side of the approx (LHS) in one shot */
     double log_LHS;
@@ -272,10 +272,10 @@ static double logcdf(double a)
     long sign = 1, i = 0;
 
     if (a > 6)
-        return -cdf(-a); /* log(1+x) \approx x */
+        return -norm_cdf(-a); /* log(1+x) \approx x */
 
     if (a > -20)
-	       return log(cdf(a));
+	       return log(norm_cdf(a));
     log_LHS = -0.5 * a * a - log(-a) - 0.5 * log(2 * M_PI);
 
     while (fabs(last_total - right_hand_side) > DBL_EPSILON)
