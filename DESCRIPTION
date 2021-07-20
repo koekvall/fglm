@@ -16,6 +16,6 @@ License: MIT + file LICENSE
 RoxygenNote: 7.1.1
 Encoding: UTF-8
 Authors@R: c(person("Karl Oskar", "Ekvall", email = "k.o.ekvall@gmail.com",
-  role = c("aut", "cre")),person("Jonatan", "Risberg", role = "aut"),
+  role = c("aut", "cre")), person("Jonatan", "Risberg", role = "aut"),
   person("Danilo", "Horta", role = "ctb",
   comment = "Copyright holder of normal.h"))
