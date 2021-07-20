@@ -37,9 +37,10 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
   eta <- X %*% b
   y <- stats::rexp(n = nrow(X), rate = exp(eta))
   y <- floor(y / d) * d
-  y <- pmin(y, ymax)
-  yupp <- y + d
-  yupp[y == ymax] <- Inf
+  idx_max <- y >= ymax
+  y[idx_max] <- ymax
+  yupp <- y + min(d, ymax)
+  yupp[idx_max] <- Inf
   return(cbind(y, yupp))
 }
 
@@ -71,7 +72,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #'  }
 #'
 #' @export
-generate_norm <- function(X, b, d = 1, ymax = 5){
+generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5){
   # Do argument checking
   stopifnot(is.matrix(X))
   p <- ncol(X)
@@ -79,14 +80,17 @@ generate_norm <- function(X, b, d = 1, ymax = 5){
   stopifnot(is.numeric(b), length(b) == p)
   stopifnot(is.numeric(d), length(d) == 1, d > 0)
   stopifnot(is.numeric(ymax), length(ymax) == 1, ymax >= 0)
+  stopifnot(is.numeric(ymin), length(ymin) == 1, ymin <= 0)
   eta <- X %*% b
-  y <- stats::rnorm(n,mean=eta)
-  y <- floor(y / d)*d
+  y <- stats::rnorm(n, mean = eta)
+  y <- floor(y / d) * d
   y <- pmin(y, ymax)
-  y <- pmax(y, -ymax)
-  yupp <- y + d
+  y <- pmax(y, ymin)
+  yupp <- y + min(d, ymax)
   yupp[y == ymax] <- Inf
-  y[y < -ymax] <- -Inf
+  idx_min <- y == ymin
+  y[idx_min] <- -Inf
+  yupp[idx_min] <- min(-ymax + d, 0)
   return(cbind(y, yupp))
 }
 
