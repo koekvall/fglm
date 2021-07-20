@@ -85,19 +85,12 @@ generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5){
   y <- stats::rnorm(n, mean = eta)
   y <- floor(y / d) * d
   y <- pmin(y, ymax)
-<<<<<<< HEAD
   y <- pmax(y, ymin)
   yupp <- y + min(d, ymax)
   yupp[y == ymax] <- Inf
   idx_min <- y == ymin
-=======
-  y <- pmax(y, -ymax)
-  yupp <- y + min(d, ymax)
-  yupp[y == ymax] <- Inf
-  idx_min <- y == -ymax
->>>>>>> b7b5200114300d8ea405be102856eff304fc8471
   y[idx_min] <- -Inf
-  yupp[idx_min] <- min(-ymax + d, 0)
+  yupp[idx_min] <- min(ymin + d, 0)
   return(cbind(y, yupp))
 }
 
