@@ -7,11 +7,15 @@ Author: Karl Oskar Ekvall [aut, cre], Jonatan Risberg [aut]
 Maintainer: Karl Oskar Ekvall <k.o.ekvall@gmail.com>
 Description: Accelerated proximal gradient descent (~FISTA) and proximal Newton
   algorithms for fitting elastic-net regularized regression models for interval
-  censored observations. Efficiently computes the solution path for a sequence
-  of penalty parameters. Currently supports (censored) Exponential
-  distribution with log-link and Normal distribution with identity link.
+  censored responses. Efficiently computes the solution path for a sequence of
+  penalty parameters. Currently supports (censored) Exponential distribution
+  with log-link and Normal distribution with identity link.
 Imports: Rcpp (>= 1.0.6)
 LinkingTo: Rcpp, RcppArmadillo
 License: MIT + file LICENSE
 RoxygenNote: 7.1.1
 Encoding: UTF-8
+Authors@R: c(person("Karl Oskar", "Ekvall", email = "k.o.ekvall@gmail.com",
+  role = c("aut", "cre")),person("Jonatan", "Risberg", role = "aut"),
+  person("Danilo", "Horta", role = "ctb",
+  comment = "Copyright holder of normal.h"))
