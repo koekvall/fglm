@@ -1,6 +1,6 @@
 # Calculates difference between numderiv gradient/hessian and explicit gradient/hessian expression of the likelihood function
 set.seed(3)
-library(numDeriv, fglm)
+library(numDeriv, icnet)
 # Generate data
 p <- 4
 n <- 20
@@ -15,7 +15,7 @@ pen_test <- runif(p)
 
 # Latent normal
 Y <- generate_norm(X , b)
-obj <- function(theta)fglm::obj_diff(y = Y[, 1], X = X, b = theta, yupp = Y[, 2],
+obj <- function(theta)icnet::obj_diff(y = Y[, 1], X = X, b = theta, yupp = Y[, 2],
                                      lam = lam_test, alpha = alpha_test,
                                      pen_factor = pen_test,
                                      order = 0, dist = "norm")$obj
@@ -28,7 +28,7 @@ cat("Difference in obj to naive calculation is",
 
 cat("Largest difference between numerical and analytical gradient is", 
     max(abs(numDeriv::grad(obj, b_test) - 
-              fglm::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
+              icnet::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
                              lam = lam_test, alpha = alpha_test,
                              pen_factor = pen_test,
                              order = 1, dist = "norm")$sub_grad)),
@@ -36,7 +36,7 @@ cat("Largest difference between numerical and analytical gradient is",
 
 cat("Largest difference between numerical and analytical Hessian is", 
     max(abs(numDeriv::hessian(obj, b_test) - 
-              fglm::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
+              icnet::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
                              lam = lam_test, alpha = alpha_test,
                              pen_factor = pen_test,
                              order = 2, dist = "norm")$hessian)),
@@ -44,7 +44,7 @@ cat("Largest difference between numerical and analytical Hessian is",
 
 # Latent Extreme value (~Exponential with log-link)
 Y <- generate_ee(X , b)
-obj <- function(theta)fglm::obj_diff(y = Y[, 1], X = X, b = theta, yupp = Y[, 2],
+obj <- function(theta)icnet::obj_diff(y = Y[, 1], X = X, b = theta, yupp = Y[, 2],
                                      lam = lam_test, alpha = alpha_test,
                                      pen_factor = pen_test,
                                      order = 0, dist = "ee")$obj
@@ -57,7 +57,7 @@ cat("Difference in obj to naive calculation is",
 
 cat("Largest difference between numerical and analytical gradient is", 
     max(abs(numDeriv::grad(obj, b_test) - 
-              fglm::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
+              icnet::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
                              lam = lam_test, alpha = alpha_test,
                              pen_factor = pen_test,
                              order = 1, dist = "ee")$sub_grad)),
@@ -65,7 +65,7 @@ cat("Largest difference between numerical and analytical gradient is",
 
 cat("Largest difference between numerical and analytical Hessian is", 
     max(abs(numDeriv::hessian(obj, b_test) - 
-              fglm::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
+              icnet::obj_diff(y = Y[, 1], X = X, b = b_test, yupp = Y[, 2],
                              lam = lam_test, alpha = alpha_test,
                              pen_factor = pen_test,
                              order = 2, dist = "ee")$hessian)),

@@ -59,7 +59,7 @@
 #'
 #'
 #' }
-#' @useDynLib fglm, .registration = TRUE
+#' @useDynLib icnet, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom Rcpp evalCpp
 #' @export

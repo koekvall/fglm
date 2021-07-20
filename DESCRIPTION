@@ -1,11 +1,15 @@
-Package: fglm
+Package: icnet
 Type: Package
-Title: Fit models for finitely supported data from a latent generalized linear model
-Version: 1.0
-Date: 2021-04-28
-Author: Karl Oskar Ekvall
+Title: Elastic-Net Regularized Regression Models for Interval Censored Responses
+Version: 1.1
+Date: 2021-07-20
+Author: Karl Oskar Ekvall [aut, cre], Jonatan Risberg [aut]
 Maintainer: Karl Oskar Ekvall <k.o.ekvall@gmail.com>
-Description: Minimize an elastic net-penalized negative log-likelihood for finitely supported data from a latent generalized linear model.
+Description: Accelerated proximal gradient descent (~FISTA) and proximal Newton
+  algorithms for fitting elastic-net regularized regression models for interval
+  censored observations. Efficiently computes the solution path for a sequence
+  of penalty parameters. Currently supports (censored) Exponential
+  distribution with log-link and Normal distribution with identity link.
 Imports: Rcpp (>= 1.0.6)
 LinkingTo: Rcpp, RcppArmadillo
 License: MIT + file LICENSE

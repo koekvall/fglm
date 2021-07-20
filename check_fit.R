@@ -1,5 +1,5 @@
 # Example test of main functions
-library(fglm)
+library(icnet)
 set.seed(3)
 # Generate data
 n <- 1000
