@@ -6,9 +6,14 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // fista_ee
 Rcpp::List fista_ee(const arma::vec& y, const arma::mat& X, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const uint& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc);
-RcppExport SEXP _fglm_fista_ee(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP) {
+RcppExport SEXP _icnet_fista_ee(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,9 +32,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fista_norm
+Rcpp::List fista_norm(const arma::vec& y, const arma::mat& X, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const uint& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc);
+RcppExport SEXP _icnet_fista_norm(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type yupp(yuppSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lam1(lam1SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const uint& >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const double& >::type L(LSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type acc(accSEXP);
+    rcpp_result_gen = Rcpp::wrap(fista_norm(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc));
+    return rcpp_result_gen;
+END_RCPP
+}
 // obj_diff_cpp
-Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order);
-RcppExport SEXP _fglm_obj_diff_cpp(SEXP ySEXP, SEXP XSEXP, SEXP bSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP orderSEXP) {
+Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order, const std::string dist);
+RcppExport SEXP _icnet_obj_diff_cpp(SEXP ySEXP, SEXP XSEXP, SEXP bSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP orderSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,13 +66,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type lam1(lam1SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
     Rcpp::traits::input_parameter< const uint& >::type order(orderSEXP);
-    rcpp_result_gen = Rcpp::wrap(obj_diff_cpp(y, X, b, yupp, lam1, lam2, order));
+    Rcpp::traits::input_parameter< const std::string >::type dist(distSEXP);
+    rcpp_result_gen = Rcpp::wrap(obj_diff_cpp(y, X, b, yupp, lam1, lam2, order, dist));
     return rcpp_result_gen;
 END_RCPP
 }
 // soft_t
 arma::vec soft_t(arma::vec x, const arma::vec& lam);
-RcppExport SEXP _fglm_soft_t(SEXP xSEXP, SEXP lamSEXP) {
+RcppExport SEXP _icnet_soft_t(SEXP xSEXP, SEXP lamSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -58,7 +85,7 @@ END_RCPP
 }
 // log1mexp
 arma::vec log1mexp(arma::vec x);
-RcppExport SEXP _fglm_log1mexp(SEXP xSEXP) {
+RcppExport SEXP _icnet_log1mexp(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -68,8 +95,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // prox_newt
-Rcpp::List prox_newt(const arma::vec& y, const arma::mat& X, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const arma::uvec& maxit, const arma::vec& tol, const bool& verbose, const bool& linsearch);
-RcppExport SEXP _fglm_prox_newt(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP linsearchSEXP) {
+Rcpp::List prox_newt(const arma::vec& y, const arma::mat& X, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const arma::uvec& maxit, const arma::vec& tol, const bool& verbose, const bool& linsearch, const std::string dist);
+RcppExport SEXP _icnet_prox_newt(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP linsearchSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -83,21 +110,23 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< const bool& >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< const bool& >::type linsearch(linsearchSEXP);
-    rcpp_result_gen = Rcpp::wrap(prox_newt(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch));
+    Rcpp::traits::input_parameter< const std::string >::type dist(distSEXP);
+    rcpp_result_gen = Rcpp::wrap(prox_newt(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, dist));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_fglm_fista_ee", (DL_FUNC) &_fglm_fista_ee, 11},
-    {"_fglm_obj_diff_cpp", (DL_FUNC) &_fglm_obj_diff_cpp, 7},
-    {"_fglm_soft_t", (DL_FUNC) &_fglm_soft_t, 2},
-    {"_fglm_log1mexp", (DL_FUNC) &_fglm_log1mexp, 1},
-    {"_fglm_prox_newt", (DL_FUNC) &_fglm_prox_newt, 10},
+    {"_icnet_fista_ee", (DL_FUNC) &_icnet_fista_ee, 11},
+    {"_icnet_fista_norm", (DL_FUNC) &_icnet_fista_norm, 11},
+    {"_icnet_obj_diff_cpp", (DL_FUNC) &_icnet_obj_diff_cpp, 8},
+    {"_icnet_soft_t", (DL_FUNC) &_icnet_soft_t, 2},
+    {"_icnet_log1mexp", (DL_FUNC) &_icnet_log1mexp, 1},
+    {"_icnet_prox_newt", (DL_FUNC) &_icnet_prox_newt, 11},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_fglm(DllInfo *dll) {
+RcppExport void R_init_icnet(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

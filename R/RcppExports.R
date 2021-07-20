@@ -2,22 +2,26 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 fista_ee <- function(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc) {
-    .Call(`_fglm_fista_ee`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
+    .Call(`_icnet_fista_ee`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
 }
 
-obj_diff_cpp <- function(y, X, b, yupp, lam1, lam2, order) {
-    .Call(`_fglm_obj_diff_cpp`, y, X, b, yupp, lam1, lam2, order)
+fista_norm <- function(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc) {
+    .Call(`_icnet_fista_norm`, y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc)
+}
+
+obj_diff_cpp <- function(y, X, b, yupp, lam1, lam2, order, dist) {
+    .Call(`_icnet_obj_diff_cpp`, y, X, b, yupp, lam1, lam2, order, dist)
 }
 
 soft_t <- function(x, lam) {
-    .Call(`_fglm_soft_t`, x, lam)
+    .Call(`_icnet_soft_t`, x, lam)
 }
 
 log1mexp <- function(x) {
-    .Call(`_fglm_log1mexp`, x)
+    .Call(`_icnet_log1mexp`, x)
 }
 
-prox_newt <- function(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch) {
-    .Call(`_fglm_prox_newt`, y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch)
+prox_newt <- function(y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, dist) {
+    .Call(`_icnet_prox_newt`, y, X, yupp, lam1, lam2, b, maxit, tol, verbose, linsearch, dist)
 }
 

@@ -12,7 +12,8 @@ obj_diff(
   lam = 0,
   alpha = 1,
   pen_factor = c(0, rep(1, ncol(X) - 1)),
-  order
+  order,
+  dist
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ to 0 for first element of b and 1 for the remaining.}
 
 \item{order}{An integer where 0 means only value is computed; 1 means both value
 and sub-gradient; and 2 means value, sub-gradient, and Hessian (see details)}
+
+\item{dist}{String indicating which distribution to use, currently supports
+Exponential with log-link ("ee") and normal with identity link ("norm")}
 }
 \value{
 A list with elements "obj", "grad", and "hessian" (see details)
