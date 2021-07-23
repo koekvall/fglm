@@ -64,3 +64,4 @@ CV_norm_fista <- icnet(Y_norm[, 1], Y_norm[, 2], X, method = "fista",distr = "no
 
 CV_norm_prox <- icnet(Y_norm[, 1], Y_norm[, 2], X, method = "prox_newt",distr = "norm",
                        lam = lam_list, CV=TRUE, nfolds=10, alpha = 0.5)
+
