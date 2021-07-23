@@ -11,9 +11,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// fista_ee
-Rcpp::List fista_ee(const arma::vec& y, const arma::mat& X, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const uint& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc);
-RcppExport SEXP _icnet_fista_ee(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP) {
+// fista
+Rcpp::List fista(const arma::vec& y, const arma::mat& X, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const uint& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc, const std::string& dist);
+RcppExport SEXP _icnet_fista(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -28,28 +28,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type L(LSEXP);
     Rcpp::traits::input_parameter< const bool& >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< const bool& >::type acc(accSEXP);
-    rcpp_result_gen = Rcpp::wrap(fista_ee(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc));
-    return rcpp_result_gen;
-END_RCPP
-}
-// fista_norm
-Rcpp::List fista_norm(const arma::vec& y, const arma::mat& X, const arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const uint& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc);
-RcppExport SEXP _icnet_fista_norm(SEXP ySEXP, SEXP XSEXP, SEXP yuppSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP bSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type yupp(yuppSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type lam1(lam1SEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
-    Rcpp::traits::input_parameter< const uint& >::type maxit(maxitSEXP);
-    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< const double& >::type L(LSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type acc(accSEXP);
-    rcpp_result_gen = Rcpp::wrap(fista_norm(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc));
+    Rcpp::traits::input_parameter< const std::string& >::type dist(distSEXP);
+    rcpp_result_gen = Rcpp::wrap(fista(y, X, yupp, lam1, lam2, b, maxit, tol, L, verbose, acc, dist));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -117,8 +97,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_icnet_fista_ee", (DL_FUNC) &_icnet_fista_ee, 11},
-    {"_icnet_fista_norm", (DL_FUNC) &_icnet_fista_norm, 11},
+    {"_icnet_fista", (DL_FUNC) &_icnet_fista, 12},
     {"_icnet_obj_diff_cpp", (DL_FUNC) &_icnet_obj_diff_cpp, 8},
     {"_icnet_soft_t", (DL_FUNC) &_icnet_soft_t, 2},
     {"_icnet_log1mexp", (DL_FUNC) &_icnet_log1mexp, 1},
