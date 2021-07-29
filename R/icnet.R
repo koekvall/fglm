@@ -1,13 +1,13 @@
-library(caret)
-#' 
+#'Elastic-net penalized regression for interval censored responses 
+#'
 #' @description{
-#'   Minimizes an elastic net-penalized negative log-likelihood for finitely
-#'   supported data from a generalized linear model.
+#'   Minimizes an elastic net-penalized negative log-likelihood for interval
+#'   censored responses using accelerated proximal gradient descent or 
+#'   proximax Newton.
 #' }
 #'
-#' @param y A vector of observed responses (see details).
-#' @param yupp A vector of upper endpoints of the interval corresponding to y
-#' (see details)
+#' @param y A vector of lower endpoints for the intervals including the censored responses (see details).
+#' @param yupp A vector of upper endpoints of the intervals corresponding to y.
 #' @param X A matrix of predictors whose i:th row corresponds to the i:th
 #'   element in y.
 #' @param b A vector of initial values for regression coefficients
@@ -26,16 +26,15 @@ library(caret)
 #' printed
 #' @param acc A logical indicating whether to use acceleration when the FISTA
 #' algorithm is used
-#' @param CV A logical indicating whether to use k-fold cross-validation to estimate regularization parameters
-#' @param nfolds The number of folds in k-fold cross-validation.
+#' @param nfolds The number of folds in k-fold cross-validation; 1 corresponds
+#' to no cross-validation.
 #' @return A matrix where each row correspond to a value of lam and the columns
 #' are coefficient estimates (1 - p), the value of lam (p + 1), the number of
 #' iterations required (p + 2), and whether zero is in the sub-differential at
 #' the final iterate (p + 3)
 #' @details{
-#'   The model assumes latent responses are generated from an standard normal
-#'   generalized linear model with mean -X*b. The data are intervals in
-#'   which the latent responses fell, [y, yupp), and the predictors.
+#'   The data are intervals  [y, yupp) including latent, unobservable responses
+#'   and predictors.
 #'
 #'   If method = "fista", then only the first elements of maxit and tol are
 #'   used. If method = "prox_newt", then the first element of maxit is the
@@ -46,42 +45,46 @@ library(caret)
 #'   for terminating the coordinate descent updates within each Newton
 #'   iteration.}
 #'
-#'
-#'
+
 #' @useDynLib icnet, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom Rcpp evalCpp
 #' @export
 icnet <- function(y, yupp, X, b = rep(0, ncol(X)),
                lam = 1e-5, alpha = 0, pen_factor = c(0, rep(1, ncol(X) - 1)), L = 10,
-               maxit = rep(1e2,3),tol = rep(1e-8,2), 
+               maxit = rep(1e2,3), tol = rep(1e-8,2), 
                method = "fista",
                distr = "norm",
                verbose = FALSE, 
                acc = TRUE, 
-               CV=FALSE, nfolds=10){
+               nfolds = 1){
   # Do argument checking
-  arg_check(y,yupp,X,lam,CV,nfolds,alpha,pen_factor,method,distr,L,acc,tol,maxit,verbose)
+  arg_check(y, yupp, X, b, lam, alpha, pen_factor, L, tol, method, distr, verbose, acc, nfolds)
   n_lam <- length(lam)
   lam <- sort(lam, decreasing  = TRUE)
   p <- ncol(X)
   n <- nrow(X)
-  if(CV){
-    flds <- createFolds(y, k = nfolds, list = TRUE, returnTrain = FALSE)
-    residual_matrix <- matrix(0,ncol=nfolds,nrow=n_lam) 
-  }
-  else{
-    nfolds <- 1
+  IDX <- matrix(NA, nrow = 2, ncol = nfolds)
+  if(nfolds > 1){
+    permute_idx <- sample(1:n, n, replace = FALSE)
+    IDX[1, ] <- seq(1, n - floor(n / nfolds), by = floor(n / nfolds))
+    IDX[2, 1:(nfolds - 1), ] <- IDX[1, 2:nfolds] - 1
+    Idx[2, nfolds] <- n
+  } else{
+    permute_idx <- 1:n
+    IDX[, 1] <- c(1, n)
   }
   
   out <- matrix(0, nrow = n_lam, ncol = p + 4)
-  colnames(out) <- c(paste0(b, 1:p), "lam", "iter", "found min","CV_err")
+  colnames(out) <- c(paste0(b, 1:p), "lam", "iter", "found min", "CV_err")
   
-  for (f in 1:nfolds){
+  for (jj in 1:nfolds){
+    fit_idx <- permute_idx[IDX[1, jj]:IDX[2, jj]]
     for(ii in 1:n_lam){
       if(method == "fista"){
         if(CV){
-          fit <- fista(y = y[-flds[[f]]],
+          
+          fit <- fista(y = y,
                        yupp = yupp[-flds[[f]]],
                        X = X[-flds[[f]],],
                        lam1 = alpha * lam[ii] * pen_factor,
@@ -180,7 +183,14 @@ icnet <- function(y, yupp, X, b = rep(0, ncol(X)),
 }
 
 
-arg_check <- function(y,yupp,X,lam,CV,nfolds,alpha,pen_factor,method,distr,L,acc,tol,maxit,verbose){
+arg_check <- function(y, yupp, X, b,
+                      lam, alpha, pen_factor, L,
+                      maxit, tol, 
+                      method,
+                      distr,
+                      verbose, 
+                      acc, 
+                      nfolds){
   stopifnot(is.matrix(X))
   p <- ncol(X)
   n <- nrow(X)
@@ -188,8 +198,8 @@ arg_check <- function(y,yupp,X,lam,CV,nfolds,alpha,pen_factor,method,distr,L,acc
   stopifnot(is.null(dim(yupp)))
   stopifnot(is.numeric(yupp), is.null(dim(yupp)), length(yupp) == n)
   stopifnot(is.numeric(lam), is.null(dim(lam)))
-  stopifnot(is.logical(CV))
-  stopifnot(nfolds == round(nfolds), nfolds > 0)
+  stopifnot(is.numeric(nfolds), length(nfolds) == 1, nfolds == round(nfolds),
+            nfolds > 0, nfolds <= n)
   stopifnot(is.numeric(alpha), is.null(dim(alpha)), length(alpha) == 1,
             alpha >= 0, alpha <= 1)
   stopifnot(is.numeric(pen_factor), is.null(dim(pen_factor)),
@@ -209,7 +219,6 @@ arg_check <- function(y,yupp,X,lam,CV,nfolds,alpha,pen_factor,method,distr,L,acc
     stopifnot(is.numeric(maxit), length(maxit) >= 3, all(maxit == floor(maxit)),
               all(maxit >= 0))
   }
-  
   stopifnot(is.numeric(b), length(b) == p)
   stopifnot(is.logical(verbose), length(verbose) == 1)
 }
