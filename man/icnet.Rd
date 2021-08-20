@@ -14,7 +14,7 @@ icnet(
   L = 10,
   maxit = rep(100, 3),
   tol = rep(1e-08, 2),
-  method = "fista",
+  method = "prox_newt",
   distr = "norm",
   verbose = FALSE,
   acc = TRUE,
