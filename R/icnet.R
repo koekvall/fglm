@@ -121,7 +121,7 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
         } else if(distr == "norm"){
           pred <- X[-fit_idx, , drop = F] %*% b
         }
-        CV_errors[ii, jj] <- mean((pred >= Y[-fit_idx, 1]) & pred <= Y[-fit_idx, 2])
+        CV_errors[ii, jj] <- mean((pred < Y[-fit_idx, 1]) | pred >= Y[-fit_idx, 2])
       } else{
         out[ii, 1:p] <- b
         out[ii, p + 1] <- lam[ii]
@@ -131,7 +131,7 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
         } else if(distr == "norm"){
           pred <- X %*% b
         }
-        out[ii, p + 4] <- mean((pred >= Y[, 1]) & (pred < Y[, 2]))
+        out[ii, p + 4] <- mean((pred < Y[, 1]) | (pred >= Y[, 2]))
         # Check if zero in sub-differential
         zero_idx <- b == 0
         derivs <- obj_diff_cpp(y = Y[, 1], X = X, b = b, yupp = Y[, 2], lam1 = alpha *
