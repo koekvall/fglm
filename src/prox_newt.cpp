@@ -27,6 +27,7 @@ lam2, const uint& maxit, const double& tol, const bool& verbose, const std::stri
     rk = lik_norm(y, yupp, eta, 1);
     hk = lik_norm(y, yupp, eta, 2);
   }
+
   // only term changing in coordinate descent iterations
   arma::vec eta_jkl = eta;
 
@@ -84,7 +85,6 @@ linsearch,const std::string dist)
     obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
     }
   double obj_new;
-
   for(size_t kk = 0; kk < maxit(0); ++kk){
     // Get proposed Newton step
     arma::vec b_bar = newton_step(y, X, b, eta, yupp, lam1, lam2, maxit(2),

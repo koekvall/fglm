@@ -66,13 +66,23 @@ arma::vec norm_logpdf_d(const double& x)
 
 double lik_norm(double y, double yupp, const double& eta, const uint& order)
 {
+  double out;
   // Center data
   y -= eta;
   yupp -= eta;
   
+  // Make it so that |yupp| is always larger than |y| in computations
+  // Uses that R(b) - R(a) = R(-a) - R(-b) for normal cdf R
+  double sgn = 1.0;
+  if(std::abs(y) > std::abs(yupp)){
+    out = yupp;
+    yupp = -y;
+    y = -out;
+    sgn = -1.0;
+  }
   // Compute stably on log-scale
   double logcdf = norm_logcdf(yupp) + log1mexp(norm_logcdf(yupp) - norm_logcdf(y));
-  double out = logcdf;
+  out = logcdf;
   if(order >= 1){
     double pdf1 = norm_logpdf(yupp);
     double pdf2 = norm_logpdf(y);
@@ -81,12 +91,15 @@ double lik_norm(double y, double yupp, const double& eta, const uint& order)
     } else{
       out = std::exp(-logcdf + pdf2 + log1mexp(pdf2 - pdf1));
     }
+    out *= sgn;
   } 
   if(order == 2){
       out = (-out) * out;
       arma::vec dpdf1 = norm_logpdf_d(yupp);
       arma::vec dpdf2 = norm_logpdf_d(y);
-      out += dpdf1(1) * std::exp(dpdf1(0) - logcdf);
+      if(arma::is_finite(dpdf1(0))){
+        out += dpdf1(1) * std::exp(dpdf1(0) - logcdf);
+      }
       out -= dpdf2(1) * std::exp(dpdf2(0) - logcdf);
   }
   return out;

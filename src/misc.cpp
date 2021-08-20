@@ -28,7 +28,7 @@ arma::vec soft_t(arma::vec x, const arma::vec& lam)
 double log1mexp(double x)
 {
   if(x <= 0.0){
-    x = -std::numeric_limits<double>::infinity();
+    x = R_NaN;
   } else if(x <= 0.693){
     x =  std::log(-std::expm1(-x));
   } else{
