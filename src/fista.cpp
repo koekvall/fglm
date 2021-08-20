@@ -4,8 +4,9 @@
 
 // [[Rcpp::export]]
 Rcpp::List fista(const arma::vec& y, const arma::mat& X, const arma::vec& yupp,
-                 const arma::vec& lam1, const arma::vec& lam2, arma::vec b, const uint& maxit,
-                 const double& tol, const double& L, const bool& verbose, const bool& acc,const std::string& dist)
+                 const arma::vec& lam1, const arma::vec& lam2, arma::vec b,
+                 const uint& maxit, const double& tol, const double& L,
+                 const bool& verbose, const bool& acc,const std::string& dist)
 {
   const uint p = X.n_cols;
   arma::vec b_bar = b;

@@ -3,12 +3,12 @@
 #' @description{
 #'   Minimizes an elastic net-penalized negative log-likelihood for interval
 #'   censored responses using accelerated proximal gradient descent or 
-#'   proximax Newton.
+#'   proximal Newton.
 #' }
 #'
-#' @param y A vector of lower endpoints for the intervals including the censored responses (see details).
-#' @param yupp A vector of upper endpoints of the intervals corresponding to y.
-#' @param X A matrix of predictors whose i:th row corresponds to the i:th
+#' @param Y A matrix (n x 2) with two columns corresponding to lower and
+#'   upper endpoints of response intervals (see details).
+#' @param X A matrix (n x p) of predictors whose i:th row corresponds to the i:th
 #'   element in y.
 #' @param b A vector of initial values for regression coefficients
 #' @param lam A vector of penalty parameters to fit the model for
@@ -33,8 +33,9 @@
 #' iterations required (p + 2), and whether zero is in the sub-differential at
 #' the final iterate (p + 3)
 #' @details{
-#'   The data are intervals  [y, yupp) including latent, unobservable responses
-#'   and predictors.
+#'   The model assumes the observed data comprise predictor and an interval
+#'   containing a latent, unobservable variable. The first column in Y is
+#'   the lower endpoint of the interval and the second columns is the upper.
 #'
 #'   If method = "fista", then only the first elements of maxit and tol are
 #'   used. If method = "prox_newt", then the first element of maxit is the
@@ -50,43 +51,47 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom Rcpp evalCpp
 #' @export
-icnet <- function(y, yupp, X, b = rep(0, ncol(X)),
+icnet <- function(Y, X, b = rep(0, ncol(X)),
                lam = 1e-5, alpha = 0, pen_factor = c(0, rep(1, ncol(X) - 1)), L = 10,
-               maxit = rep(1e2,3), tol = rep(1e-8,2), 
+               maxit = rep(1e2,3),
+               tol = rep(1e-8,2), 
                method = "fista",
                distr = "norm",
                verbose = FALSE, 
                acc = TRUE, 
                nfolds = 1){
+  
   # Do argument checking
-  arg_check(y, yupp, X, b, lam, alpha, pen_factor, L, tol, method, distr, verbose, acc, nfolds)
+  arg_check(Y, X, b, lam, alpha, pen_factor, L, maxit, tol, method, distr,
+            verbose, acc, nfolds)
+  
   n_lam <- length(lam)
   lam <- sort(lam, decreasing  = TRUE)
   p <- ncol(X)
   n <- nrow(X)
-  IDX <- matrix(NA, nrow = 2, ncol = nfolds)
-  if(nfolds > 1){
-    permute_idx <- sample(1:n, n, replace = FALSE)
-    IDX[1, ] <- seq(1, n - floor(n / nfolds), by = floor(n / nfolds))
-    IDX[2, 1:(nfolds - 1), ] <- IDX[1, 2:nfolds] - 1
-    Idx[2, nfolds] <- n
-  } else{
-    permute_idx <- 1:n
-    IDX[, 1] <- c(1, n)
-  }
   
-  out <- matrix(0, nrow = n_lam, ncol = p + 4)
-  colnames(out) <- c(paste0(b, 1:p), "lam", "iter", "found min", "CV_err")
+  if(nfolds > 1){
+    IDX <- matrix(NA, nrow = 2, ncol = nfolds)
+    permute_idx <- sample(1:n, n, replace = FALSE)
+    IDX[1, ] <- seq(1, n - floor(n / nfolds) + 1, by = floor(n / nfolds))
+    IDX[2, 1:(nfolds - 1)] <- IDX[1, 2:nfolds] - 1
+    IDX[2, nfolds] <- n
+    CV_errors <- matrix(NA, nrow = n_lam, ncol = nfolds)
+  }
   
   for (jj in 1:nfolds){
-    fit_idx <- permute_idx[IDX[1, jj]:IDX[2, jj]]
+    if(nfolds > 1){
+      fit_idx <- permute_idx[-c(IDX[1, jj]:IDX[2, jj])]
+    } else{
+      fit_idx <- 1:n
+      out <- matrix(NA, nrow = n_lam, ncol = p + 4)
+      colnames(out) <- c(paste0("b", 1:p), "lam", "iter", "conv", "err")
+    }
     for(ii in 1:n_lam){
       if(method == "fista"){
-        if(CV){
-          
-          fit <- fista(y = y,
-                       yupp = yupp[-flds[[f]]],
-                       X = X[-flds[[f]],],
+          fit <- fista(y = Y[fit_idx, 1],
+                       yupp = Y[fit_idx, 2],
+                       X = X[fit_idx, , drop = F],
                        lam1 = alpha * lam[ii] * pen_factor,
                        lam2 = (1 - alpha) * lam[ii] * pen_factor,
                        b = b,
@@ -96,27 +101,10 @@ icnet <- function(y, yupp, X, b = rep(0, ncol(X)),
                        verbose = verbose,
                        acc = acc,
                        dist = distr)
-        }
-        else{
-          fit <- fista(y = y,
-                       X = X,
-                       yupp = yupp,
-                       lam1 = alpha * lam[ii] * pen_factor,
-                       lam2 = (1 - alpha) * lam[ii] * pen_factor,
-                       b = b,
-                       maxit = maxit[1],
-                       tol = tol[1],
-                       L = L,
-                       verbose = verbose,
-                       acc = acc,
-                       dist = distr)
-        }
-      } 
-      else if(method == "prox_newt"){
-        if(CV){
-          fit <- prox_newt(y = y[-flds[[f]]],
-                           X = X[-flds[[f]],],
-                           yupp = yupp[-flds[[f]]],
+      } else{
+          fit <- prox_newt(y = Y[fit_idx, 1],
+                           X = X[fit_idx, , drop = F],
+                           yupp = Y[fit_idx, 2],
                            lam1 = alpha * lam[ii] * pen_factor,
                            lam2 = (1 - alpha) * lam[ii] * pen_factor,
                            b = b,
@@ -125,65 +113,68 @@ icnet <- function(y, yupp, X, b = rep(0, ncol(X)),
                            verbose = verbose,
                            linsearch = TRUE,
                            dist = distr)
-        }
-        else{
-          fit <- prox_newt(y = y,
-                           X = X,
-                           yupp = yupp,
-                           lam1 = alpha * lam[ii] * pen_factor,
-                           lam2 = (1 - alpha) * lam[ii] * pen_factor,
-                           b = b,
-                           maxit = maxit,
-                           tol = tol,
-                           verbose = verbose,
-                           linsearch = TRUE,
-                           dist = distr)
-        }
       }
       b <- fit[["b"]]
-      out[ii, ] <- c(b, lam[ii], fit[["iter"]], 0,0)
-      if(CV){
-        residual_matrix[ii,f] <- t((1/n)*norm(y[flds[[f]]] - X[flds[[f]],]%*%b,"2")^2)
-      }
-      # Check if zero in sub-differential
-      zero_idx <- b == 0
-      derivs <- obj_diff_cpp(y = y, X = X, b = b, yupp = yupp, lam1 = alpha *
-                               lam[ii] * pen_factor, lam2 = (1 - alpha) * lam[ii] * pen_factor, order = 1, distr)
-      is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
-      is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <= (alpha * lam[ii] *
-                                                                       pen_factor[zero_idx]))
-      
-      early <-  out[ii, p + 2] < maxit[1]
-      
-      if(is_KKT & early){
-        out[ii, p + 3] <- 0
-      } else if(is_KKT & !early){
-        out[ii, p + 3] <- 1
-      } else if(!is_KKT & !early){
-        out[ii, p + 3] <- 2
+      if(nfolds > 1){
+        if(distr == "ee"){
+          pred <- exp(-X[-fit_idx, , drop = F] %*% b)
+        } else if(distr == "norm"){
+          pred <- X[-fit_idx, , drop = F] %*% b
+        }
+        CV_errors[ii, jj] <- mean((pred >= Y[-fit_idx, 1]) & pred <= Y[-fit_idx, 2])
       } else{
-        out[ii, p + 3] <- 3
+        out[ii, 1:p] <- b
+        out[ii, p + 1] <- lam[ii]
+        out[ii, p + 2] <- fit[["iter"]]
+        if(distr == "ee"){
+          pred <- exp(-X %*% b)
+        } else if(distr == "norm"){
+          pred <- X %*% b
+        }
+        out[ii, p + 4] <- mean((pred >= Y[, 1]) & (pred < Y[, 2]))
+        # Check if zero in sub-differential
+        zero_idx <- b == 0
+        derivs <- obj_diff_cpp(y = Y[, 1], X = X, b = b, yupp = Y[, 2], lam1 = alpha *
+                                 lam[ii] * pen_factor,
+                               lam2 = (1 - alpha) * lam[ii] * pen_factor,
+                               order = 1,
+                               distr)
+        is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
+        is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <=
+                                 (alpha * lam[ii] * pen_factor[zero_idx]))
+        
+        early <-  out[ii, p + 2] < maxit[1]
+        
+        if(is_KKT & early){
+          out[ii, p + 3] <- 0
+        } else if(is_KKT & !early){
+          out[ii, p + 3] <- 1
+        } else if(!is_KKT & !early){
+          out[ii, p + 3] <- 2
+        } else{
+          out[ii, p + 3] <- 3
+        }
       }
-      
     }
   }
-  colnames(out) <- c(paste0("b", 1:p), "lam", "iter", "conv", "CV error")
-  if(CV){
-    CV_err <- rowMeans(residual_matrix)
-    out[,p+4] <- CV_err
-    if(verbose){
-      cat("Cross validation info and results\n")
-      print(rbind("Number of folds" = nfolds,
-                  "Minimum CV error" = min(CV_err),
-                  "Optimal lambda" = lam_list[match(min(CV_err),CV_err)]))
-      cat("\n \n")
-    }
+  if(nfolds > 1){
+    cv_err <- rowMeans(CV_errors)
+    best_idx <- which.min(cv_err)
+    lam_star <- lam[best_idx]
+    full_fit <- icnet(Y = Y, X = X, b = b, lam = lam,
+                      alpha = alpha, pen_factor = pen_factor, L = L,
+                      maxit = maxit, tol = tol, method = method,
+                      distr = distr, verbose = verbose, acc = acc,
+                      nfolds = 1)
+    full_fit <- cbind(full_fit, "cv_err" = cv_err)
+    out <- list("b_star" = full_fit[best_idx, 1:p], "lam_star" = lam_star,
+                "full_fit" = full_fit)
   }
   return(out)
 }
 
 
-arg_check <- function(y, yupp, X, b,
+arg_check <- function(Y, X, b,
                       lam, alpha, pen_factor, L,
                       maxit, tol, 
                       method,
@@ -194,9 +185,7 @@ arg_check <- function(y, yupp, X, b,
   stopifnot(is.matrix(X))
   p <- ncol(X)
   n <- nrow(X)
-  stopifnot(is.numeric(y), is.null(dim(y)), length(y) == n)
-  stopifnot(is.null(dim(yupp)))
-  stopifnot(is.numeric(yupp), is.null(dim(yupp)), length(yupp) == n)
+  stopifnot(is.matrix(Y), ncol(Y) == 2, nrow(Y) == n, all(Y[, 1] < Y[, 2]))
   stopifnot(is.numeric(lam), is.null(dim(lam)))
   stopifnot(is.numeric(nfolds), length(nfolds) == 1, nfolds == round(nfolds),
             nfolds > 0, nfolds <= n)
