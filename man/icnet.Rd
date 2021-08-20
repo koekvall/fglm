@@ -18,7 +18,7 @@ icnet(
   distr = "norm",
   verbose = FALSE,
   acc = TRUE,
-  nfolds = 1
+  nfold = 1
 )
 }
 \arguments{
@@ -55,7 +55,7 @@ printed}
 \item{acc}{A logical indicating whether to use acceleration when the FISTA
 algorithm is used}
 
-\item{nfolds}{The number of folds in k-fold cross-validation; 1 corresponds
+\item{nfold}{The number of folds in k-fold cross-validation; 1 corresponds
 to no cross-validation.}
 }
 \value{
@@ -82,7 +82,7 @@ the final iterate (p + 3)
   maximum number of Newton iterations, the second is the maximum number of
   line search iterations for each Newton update, and the third is the maximum
   number of coordinate descent iterations within each Newton update. The
-  first elemen of tol is for terminating the Newton iterations and the second
+  first element of tol is for terminating the Newton iterations and the second
   for terminating the coordinate descent updates within each Newton
   iteration.}
 }

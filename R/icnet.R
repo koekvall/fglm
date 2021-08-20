@@ -26,7 +26,7 @@
 #' printed
 #' @param acc A logical indicating whether to use acceleration when the FISTA
 #' algorithm is used
-#' @param nfolds The number of folds in k-fold cross-validation; 1 corresponds
+#' @param nfold The number of folds in k-fold cross-validation; 1 corresponds
 #' to no cross-validation.
 #' @return A matrix where each row correspond to a value of lam and the columns
 #' are coefficient estimates (1 - p), the value of lam (p + 1), the number of
@@ -42,7 +42,7 @@
 #'   maximum number of Newton iterations, the second is the maximum number of
 #'   line search iterations for each Newton update, and the third is the maximum
 #'   number of coordinate descent iterations within each Newton update. The
-#'   first elemen of tol is for terminating the Newton iterations and the second
+#'   first element of tol is for terminating the Newton iterations and the second
 #'   for terminating the coordinate descent updates within each Newton
 #'   iteration.}
 #'
@@ -59,35 +59,45 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
                distr = "norm",
                verbose = FALSE, 
                acc = TRUE, 
-               nfolds = 1){
+               nfold = 1){
   
   # Do argument checking
   arg_check(Y, X, b, lam, alpha, pen_factor, L, maxit, tol, method, distr,
-            verbose, acc, nfolds)
+            verbose, acc, nfold)
   
-  n_lam <- length(lam)
+  nlam <- length(lam)
   lam <- sort(lam, decreasing  = TRUE)
   p <- ncol(X)
   n <- nrow(X)
   
-  if(nfolds > 1){
-    IDX <- matrix(NA, nrow = 2, ncol = nfolds)
+  if(nfold > 1){
+    # Create folds
+    IDX <- matrix(NA, nrow = 2, ncol = nfold)
     permute_idx <- sample(1:n, n, replace = FALSE)
-    IDX[1, ] <- seq(1, n - floor(n / nfolds) + 1, by = floor(n / nfolds))
-    IDX[2, 1:(nfolds - 1)] <- IDX[1, 2:nfolds] - 1
-    IDX[2, nfolds] <- n
-    CV_errors <- matrix(NA, nrow = n_lam, ncol = nfolds)
+    IDX[1, ] <- seq(1, n - floor(n / nfold) + 1, by = floor(n / nfold))
+    IDX[2, 1:(nfold - 1)] <- IDX[1, 2:nfold] - 1
+    IDX[2, nfold] <- n
+    # Storage for errors
+    cv_mat <- matrix(NA, nrow = nlam, ncol = nfold)
+    # Storage for saving average coefficient for largest lambda over all folds,
+    # used as starting value when getting full fit
+    b_large <- rep(0, p)
   }
   
-  for (jj in 1:nfolds){
-    if(nfolds > 1){
+  for (jj in 1:nfold){
+    if(nfold > 1){
+      # Index for data not held out
       fit_idx <- permute_idx[-c(IDX[1, jj]:IDX[2, jj])]
     } else{
+      # Use all data for fitting if not cross-validating
       fit_idx <- 1:n
-      out <- matrix(NA, nrow = n_lam, ncol = p + 4)
+      out <- matrix(NA, nrow = nlam, ncol = p + 4)
       colnames(out) <- c(paste0("b", 1:p), "lam", "iter", "conv", "err")
     }
-    for(ii in 1:n_lam){
+    for(ii in 1:nlam){
+      #########################################################################
+      # Fit model
+      #########################################################################
       if(method == "fista"){
           fit <- fista(y = Y[fit_idx, 1],
                        yupp = Y[fit_idx, 2],
@@ -114,15 +124,15 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
                            linsearch = TRUE,
                            dist = distr)
       }
+      # Current estimate is used as starting value for next lambda
       b <- fit[["b"]]
-      if(nfolds > 1){
-        if(distr == "ee"){
-          pred <- exp(-X[-fit_idx, , drop = F] %*% b)
-        } else if(distr == "norm"){
-          pred <- X[-fit_idx, , drop = F] %*% b
-        }
-        CV_errors[ii, jj] <- mean((pred < Y[-fit_idx, 1]) | pred >= Y[-fit_idx, 2])
-      } else{
+      #########################################################################
+      
+      
+      #########################################################################
+      # If not cross-validating, save output and move to next lam
+      #########################################################################
+      if(nfold == 1){
         out[ii, 1:p] <- b
         out[ii, p + 1] <- lam[ii]
         out[ii, p + 2] <- fit[["iter"]]
@@ -131,41 +141,76 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
         } else if(distr == "norm"){
           pred <- X %*% b
         }
+        # Proportion of correctly predicted intervals in-sample
         out[ii, p + 4] <- mean((pred < Y[, 1]) | (pred >= Y[, 2]))
         # Check if zero in sub-differential
         zero_idx <- b == 0
-        derivs <- obj_diff_cpp(y = Y[, 1], X = X, b = b, yupp = Y[, 2], lam1 = alpha *
-                                 lam[ii] * pen_factor,
+        derivs <- obj_diff_cpp(y = Y[, 1],
+                               X = X,
+                               b = b,
+                               yupp = Y[, 2],
+                               lam1 = alpha * lam[ii] * pen_factor,
                                lam2 = (1 - alpha) * lam[ii] * pen_factor,
                                order = 1,
-                               distr)
+                               dist = distr)
         is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
         is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <=
                                  (alpha * lam[ii] * pen_factor[zero_idx]))
-        
+        # Did algo terminate before maxit?
         early <-  out[ii, p + 2] < maxit[1]
         
-        if(is_KKT & early){
+        if(is_KKT & early){ # All is well
           out[ii, p + 3] <- 0
         } else if(is_KKT & !early){
-          out[ii, p + 3] <- 1
-        } else if(!is_KKT & !early){
+          out[ii, p + 3] <- 1 # Found min on sqrt() tolerance but reached maxit
+        } else if(!is_KKT & !early){ # Did not find min and reached maxit
           out[ii, p + 3] <- 2
-        } else{
+        } else{ # Terminated early but did not find min
           out[ii, p + 3] <- 3
         }
-      }
-    }
-  }
-  if(nfolds > 1){
-    cv_err <- rowMeans(CV_errors)
+      } # End if nfold == 1
+      #########################################################################
+      
+      
+      #########################################################################
+      # If cross-validating, store cv_err and move to next fold
+      #########################################################################
+      else{
+        if(distr == "ee"){
+          pred <- exp(-X[-fit_idx, , drop = F] %*% b)
+        } else if(distr == "norm"){
+          pred <- X[-fit_idx, , drop = F] %*% b
+        }
+        # Store mis-classification rate (pred of latent var. outside interval)
+        cv_mat[ii, jj] <- mean((pred < Y[-fit_idx, 1]) | pred >= Y[-fit_idx, 2])
+        # If at largest lambda, store sum of b to use average as startng value
+        if(ii == 1){
+          b_large <- b_large + b
+        }
+        # If at last value value of lambda, use average of b for largest lam
+        # as starting value in next fold
+        if(ii == nlam){
+          b <- b_large / jj
+        }
+      } # End if nfolds > 1 
+      #########################################################################
+    } # End loop over lam
+  } # End loop over folds
+  
+  #############################################################################
+  # If cross-validating, prepare output and get best fit for full data
+  #############################################################################
+  if(nfold > 1){
+    cv_err <- rowMeans(cv_mat) # Average mis-classification rate for each lam
     best_idx <- which.min(cv_err)
     lam_star <- lam[best_idx]
+    # Get average estimate over all folds as starting value for full fit
+    b <- b_large / nfold # This is currently superfluous
     full_fit <- icnet(Y = Y, X = X, b = b, lam = lam,
                       alpha = alpha, pen_factor = pen_factor, L = L,
                       maxit = maxit, tol = tol, method = method,
                       distr = distr, verbose = verbose, acc = acc,
-                      nfolds = 1)
+                      nfold = 1)
     full_fit <- cbind(full_fit, "cv_err" = cv_err)
     out <- list("b_star" = full_fit[best_idx, 1:p], "lam_star" = lam_star,
                 "full_fit" = full_fit)
@@ -181,14 +226,14 @@ arg_check <- function(Y, X, b,
                       distr,
                       verbose, 
                       acc, 
-                      nfolds){
+                      nfold){
   stopifnot(is.matrix(X))
   p <- ncol(X)
   n <- nrow(X)
   stopifnot(is.matrix(Y), ncol(Y) == 2, nrow(Y) == n, all(Y[, 1] < Y[, 2]))
   stopifnot(is.numeric(lam), is.null(dim(lam)))
-  stopifnot(is.numeric(nfolds), length(nfolds) == 1, nfolds == round(nfolds),
-            nfolds > 0, nfolds <= n)
+  stopifnot(is.numeric(nfold), length(nfold) == 1, nfold == round(nfold),
+            nfold > 0, nfold <= n)
   stopifnot(is.numeric(alpha), is.null(dim(alpha)), length(alpha) == 1,
             alpha >= 0, alpha <= 1)
   stopifnot(is.numeric(pen_factor), is.null(dim(pen_factor)),
