@@ -91,7 +91,7 @@ generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5){
   y <- floor(y / d) * d # nearest smaller multiple of d
   
   yupp <- y + d
-  yupp[neg_idx & y > -ymin] <- Inf
+  yupp[neg_idx & y >= -ymin] <- Inf
   yupp[!neg_idx & y >= ymax] <- Inf
   y[neg_idx & y > -ymin] <- -ymin
   y[!neg_idx & y > ymax] <- ymax
