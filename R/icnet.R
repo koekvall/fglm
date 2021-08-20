@@ -55,7 +55,7 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
                lam = 1e-5, alpha = 0, pen_factor = c(0, rep(1, ncol(X) - 1)), L = 10,
                maxit = rep(1e2,3),
                tol = rep(1e-8,2), 
-               method = "fista",
+               method = "prox_newt",
                distr = "norm",
                verbose = FALSE, 
                acc = TRUE, 
@@ -173,7 +173,7 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
       
       
       #########################################################################
-      # If cross-validating, store cv_err and move to next fold
+      # If cross-validating, store get CV error and move to next fold
       #########################################################################
       else{
         if(distr == "ee"){
@@ -183,7 +183,7 @@ icnet <- function(Y, X, b = rep(0, ncol(X)),
         }
         # Store mis-classification rate (pred of latent var. outside interval)
         cv_mat[ii, jj] <- mean((pred < Y[-fit_idx, 1]) | pred >= Y[-fit_idx, 2])
-        # If at largest lambda, store sum of b to use average as startng value
+        # If at largest lambda, store sum of b to use average as starting value
         if(ii == 1){
           b_large <- b_large + b
         }
