@@ -6,28 +6,26 @@
 #'   proximal Newton.
 #' }
 #'
-#' @param Y A matrix (n x 2) with two columns corresponding to lower and
+#' @param Y Matrix (n x 2) with columns corresponding to lower and
 #'   upper endpoints of response intervals (see details).
-#' @param X A matrix (n x p) of predictors whose i:th row corresponds to the i:th
-#'   element in y.
-#' @param b A vector of initial values for regression coefficients
-#' @param lam A vector of penalty parameters to fit the model for
-#' @param alpha A scalar weight for elastic net (1 = lasso, 0 = ridge)
-#' @param pen_factor A vector of coefficient-specific penalty weights; defaults
-#' to 0 for first element of b and 1 for the remaining.
-#' @param maxit A vector of maximum number of iterations (see details)
-#' @param tol A vector of tolerances for FISTA or proximal Newton termination
-#' (see details)
-#' @param method Set to "fista" (FISTA) or "prox_newt" (proximal Newton)
-#' @param distr Set to "ee" for exponential distribution with log-link or "norm" for normal distribution.
-#' @param L A scalar which if method = "fista" sets step-size 1 / L, which
-#' guarantees convergence if the objective function has an L-Lipschitz gradient
-#' @param verbose A logical which if TRUE means additional information may be
-#' printed
-#' @param acc A logical indicating whether to use acceleration when the FISTA
-#' algorithm is used
-#' @param nfold The number of folds in k-fold cross-validation; 1 corresponds
-#' to no cross-validation.
+#' @param X Matrix (n x p) of predictors.
+#' @param b Vector of starting values for regression coefficients.
+#' @param lam Vector of penalty parameters.
+#' @param alpha Scalar weight for elastic net (1 = lasso, 0 = ridge).
+#' @param pen_factor Vector of coefficient-specific penalty weights.
+#' @param maxit Vector of maximum number of iterations (see details).
+#' @param tol Vector of tolerances for terminating algorithm (see details).
+#' @param method Method to use; "fista" or "prox_newt" (proximal Newton).
+#' @param distr Distribution of latent responses; "ee" for exponential.
+#'   distribution with log-link or "norm" for normal distribution with identity
+#'   link.
+#' @param L Scalar setting step-size 1 / L if method = "fista".
+#' @param verbose Logical indicating whether additional information should be
+#'   printed during fitting.
+#' @param acc Logical indicating whether to use acceleration if
+#'   method = "fista".
+#' @param nfold Number of folds in k-fold cross-validation; 1 corresponds
+#'   to no cross-validation.
 #' @return A matrix where each row correspond to a value of lam and the columns
 #' are coefficient estimates (1 - p), the value of lam (p + 1), the number of
 #' iterations required (p + 2), and whether zero is in the sub-differential at
@@ -36,6 +34,10 @@
 #'   The model assumes the observed data comprise predictor and an interval
 #'   containing a latent, unobservable variable. The first column in Y is
 #'   the lower endpoint of the interval and the second columns is the upper.
+#'   
+#'   Currently, the two supported options are that latent variable
+#'   has an exponential distribution with means exp(-x'b) or normal
+#'   distribution with mean x'b and variance 1.
 #'
 #'   If method = "fista", then only the first elements of maxit and tol are
 #'   used. If method = "prox_newt", then the first element of maxit is the
@@ -52,7 +54,10 @@
 #' @importFrom Rcpp evalCpp
 #' @export
 icnet <- function(Y, X, b = rep(0, ncol(X)),
-               lam = 1e-5, alpha = 0, pen_factor = c(0, rep(1, ncol(X) - 1)), L = 10,
+               lam = 1e-5,
+               alpha = 0,
+               pen_factor = c(0, rep(1, ncol(X) - 1)),
+               L = 10,
                maxit = rep(1e2,3),
                tol = rep(1e-8,2), 
                method = "prox_newt",
