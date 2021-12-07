@@ -2,26 +2,25 @@
 #define LIK_H
 #include <RcppArmadillo.h>
 
-double lik_ee(double y, const double& yupp, const double& eta, const uint& order);
+arma::vec loglik_ab(const double& a, const double& b, const uint& dist,
+                    const uint& order);
 
-arma::vec lik_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const
-uint& order);
+arma::mat loglik_ab(const arma::vec& a, const arma::vec& b, const uint& dist,
+                    const uint& order);
 
-arma::vec norm_logpdf_d(const double&);
+double obj_fun(const arma::vec& a, const arma::vec& b, const arma::vec& theta,
+               const arma::vec& lam1, const arma::vec& lam2, const uint& dist);
 
-double lik_norm(double y, double yupp, const double& eta, const uint& order);
+Rcpp::List obj_diff_cpp(const arma::mat& Z, const arma::vec& theta,
+                        const arma::mat& M,
+                        const arma::vec& lam1, const arma::vec& lam2,
+                        const uint& order, const uint& dist);
+  
+arma::vec norm_logpdf_d(const double& x);
 
-arma::vec lik_norm(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const
-                   uint& order);
+arma::mat get_eta(const arma::mat&, const arma::vec&);
 
-
-double obj_fun_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const arma::vec& b,
-           const arma::vec& lam1, const arma::vec& lam2);
-
-double obj_fun_norm(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const arma::vec& b,
-                  const arma::vec& lam1, const arma::vec& lam2);
-
-Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
-arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order, const std::string dist);
+arma::mat get_ab(const arma::mat&, const arma::vec&,
+                  arma::mat);
 
 #endif

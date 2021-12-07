@@ -1,7 +1,6 @@
 #include "misc.h"
 #include "likelihood.h"
 #include <cmath>
-#include <limits>
 #include <RcppArmadillo.h>
 #include "normal.h"
 
@@ -11,115 +10,225 @@
 // log-concave CDF. For example, the extreme value CDF is
 // R(t) = exp(-exp(-t)).
 
-// Likelihood derivatives are with respect a and b. Those derivatives are
-// defined to equal zero if evaluated at, respectively, a = -infty or
-// b = infty.
 
 
-double log_lik_ab(double a, double b, const uint& dist,
-                      const bool& logarithm)
+// Calculate h(a, b) = log{R(b) - R(a)} and its gradient and Hessian.
+// All derivatives with respect to an argument which is evaluated at a
+// non-finite number are defined to be zero.
+//
+// Arguments:
+// a: lower endpoint of interval
+// b: upper endpoint of interval
+// dist: which cdf R to use; dist = 1 is extreme value and dist = 2 is standard
+//       normal.
+// order: which orders of derivatives to compute. If  = 0, computes only
+// log-likelihood. Gradient is computed if order > 0, and Hessian if > 1.
+//
+// Return: vector of length 6; first element is log-likelihood; elements 2 - 3
+// are gradient, and elements 4 - 6 Hessian. Not computed elements
+// (due to order argument) are set to zero.
+arma::vec loglik_ab(const double& a, const double& b, const uint& dist,
+                    const uint& order)
 {
-  double out = 0.0;
+  arma::vec out(6, arma::fill::zeros);
+  const bool a_fin = std::isfinite(-a);
+  const bool b_fin = std::isfinite(b);
+  double c; // storage used for different things
   if(dist == 1){ // Extreme value latent CDF
-    if (std::isfinite(-a) & std::isfinite(b)){
-      out = -std::exp(a) + log1mexp(std::exp(b) - std::exp(a));
-    } else if (std::isfinite(-a)){
-      out = -std::exp(a);
-    } else if (std::isfinite(b)){
-      out = log1mexp(std::exp(b));
-    } else{
-      out = -R_NegInf;
+    
+    // Do value first first; if statements not technically necessary but
+    // may save time.
+    if (a_fin & b_fin){
+      out(0) = -std::exp(a) + log1mexp(std::exp(b) - std::exp(a));
+    } else if(a_fin){ // b = infty
+      out(0) = -std::exp(a);
+    } else if(b_fin){ // a = -infty
+      out(0) = log1mexp(std::exp(b));
     }
-  } else if (dist == 2){ // Normal latent cdf
-    if(std::isfinite(-a) & std::isfinite(b)){
-      // Make it so that |b| is always larger than |a| in computations
-      // Uses that R(b) - R(a) = R(-a) - R(-b) for normal cdf R
-      double sgn = 1.0;
-      if(std::abs(a) > std::abs(b)){
-        out = b;
-        b = -a;
-        a = -out;
+    
+    // Do gradient
+    if(order > 0){
+      if(a_fin){
+        out(1) = -std::exp(a - std::exp(a) - out(0));
       }
-      out = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
-    } else if (std::isfinite(-a)){
-      out = log1mexp(-norm_logcdf(a));
-    } else if (std::isfinite(b)){
-      out = norm_logcdf(b);
-    } else{
-      out = -R_NegInf;
+      
+      if(b_fin){
+        out(2) = std::exp(b - std::exp(b) - out(0));
+      }
+    }
+    
+    // Do Hessian
+    if(order > 1){ // Hessian
+      if(a_fin){
+        out(3) = - out(1) * out(1);
+        if(a < 0){
+          c = log1mexp(-a);
+        } else{
+          c = std::log(std::expm1(a));
+        }
+        out(3) += -arma::sign(a) * std::exp(a - std::exp(a) + c);
+      }
+      
+      if(b_fin){
+        out(5) = -out(2) * out(2);
+        if(b < 0){
+          c = log1mexp(-b);
+        } else{
+          c = std::log(std::expm1(b));
+        }
+        out(5) += -arma::sign(b) * std::exp(b - std::exp(b) + c);
+      }
+      // faster than checking if finite; will be zero is a or b is not finite
+      out(4) = -out(1) * out(2);
+    }
+    
+  } else if (dist == 2){ // Normal latent cdf
+    
+    // Do value first first; if statements not technically necessary but
+    // may save time.
+    if (a_fin & b_fin){
+      out(0) = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
+    } else if(a_fin){ // b = infty
+      out(0) = log1mexp(-norm_logcdf(a));
+    } else if(b_fin){ // a = -infty
+      out(0) = norm_logcdf(b);
+    }
+    
+    // Do gradient
+    if(order > 0){
+      if(a_fin){
+        out(1) = -std::exp(norm_logpdf(a) - out(0));
+      }
+      
+      if(b_fin){
+        out(2) =  std::exp(norm_logpdf(b) - out(0));
+      }
+    }
+    
+    // Do Hessian
+    if(order > 1){
+      arma::vec dens_deriv;
+      if(a_fin){
+        dens_deriv = norm_logpdf_d(a);
+        out(3) = -out(1) * out(1);
+        out(3) -= dens_deriv(1) * std::exp(dens_deriv(0) - out(0));
+      }
+      
+      if(b_fin){
+        dens_deriv = norm_logpdf_d(b);
+        out(5) = - out(2) * out(2);
+        out(5) += dens_deriv(1) * std::exp(dens_deriv(0) - out(0));
+      }
+      
+      // faster than checking if finite; will be zero is a or b is not finite
+      out(4) = -out(1) * out(2);
     }
   } else{
     // add other distributions here
   }
+  return out;
+}
+
+// Vectorized version of loglik_ab for double arguments; see that
+// function for argument explanations.
+//
+// Return: matrix where each column is the output from loglik_ab evaluated
+// at the corresponding elements of argument vectors a and b. Note: size of
+// return matrix depends on order; only columns with computed quantities are
+// returned.
+// [[Rcpp::export]]
+arma::mat loglik_ab(const arma::vec& a, const arma::vec& b, const uint& dist,
+                    const uint& order)
+{
+  // make return matrix needed size
+  size_t nrow_out = 1;
   
-  if(!logarithm){
-    out = std::exp(out);
+  if(order > 0){
+    nrow_out += 2;
+  }
+  
+  if(order > 1){
+    nrow_out += 3;
+  }
+  arma::mat out(nrow_out, a.n_elem, arma::fill::zeros);
+  
+  // Calculate elementwise
+  for(size_t ii = 0; ii < a.n_elem; ii++){
+   out.col(ii) = loglik_ab(a(ii), b(ii), dist, order).subvec(0, nrow_out - 1); 
   }
   return out;
 }
 
-arma::vec score_ab(double a, double b, const uint& dist)
-{
-  arma::vec out(2);
-  if(dist == 1){ // Extreme value latent CDF
-    if (std::isfinite(-a) & std::isfinite(b)){
-      double c = log1mexp(std::exp(b) - std::exp(a));
-      out(0) = a - c;
-      out(1) = b - std::exp(b) + std::exp(a) - c;
-    } else if (std::isfinite(-a)){
-      out(0) = a;
-      out(1) = 0.0;
-    } else if (std::isfinite(b)){
-      out(0) = 0.0;
-      out(1) = b - std::exp(b) - log1mexp(std::exp(b));
-    } else{
-      out = -R_NegInf;
-    }
-  } else if (dist == 2){ // Normal latent cdf
-    if(std::isfinite(-a) & std::isfinite(b)){
-      // Make it so that |b| is always larger than |a| in computations
-      // Uses that R(b) - R(a) = R(-a) - R(-b) for normal cdf R
-      double sgn = 1.0;
-      if(std::abs(a) > std::abs(b)){
-        out = b;
-        b = -a;
-        a = -out;
-        sign = -1.0
-      }
-      out = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
-    } else if (std::isfinite(-a)){
-      out = log1mexp(-norm_logcdf(a));
-    } else if (std::isfinite(b)){
-      out = norm_logcdf(b);
-    } else{
-      out = -R_NegInf;
-    }
-  } else{
-    // add other distributions here
-  }
-  
-  if(!logarithm){
-    out = std::exp(out);
-  }
-  return out;
-}
 
-arma::vec lik_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta, const
-                   uint& order)
+// [[Rcpp::export]]
+double obj_fun(const arma::vec& a, const arma::vec& b, const arma::vec& theta,
+               const arma::vec& lam1, const arma::vec& lam2, const uint& dist)
 {
-  for(uint ii = 0; ii < y.n_elem; ii++){
-    y(ii) = lik_ee(y(ii), yupp(ii), eta(ii), order);
-  }
-  return y;
-}
-
-double obj_fun_ee(arma::vec y, const arma::vec& yupp, const arma::vec& eta,
-const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
-{
-  double obj = -arma::mean(lik_ee(y, yupp, eta, 0));
-  obj += arma::sum(lam1 % arma::abs(b)) + 0.5 * arma::sum(lam2 %
-  arma::square(b));
+  double obj = -arma::mean(loglik_ab(a, b, dist, 0).row(0));
+  obj += arma::sum(lam1 % arma::abs(theta)) + 0.5 * arma::sum(lam2 %
+    arma::square(theta));
   return obj;
+}
+
+// [[Rcpp::export]]
+Rcpp::List obj_diff_cpp(const arma::mat& Z,
+                        const arma::vec& theta,
+                        const arma::mat& M,
+                        const arma::vec& lam1,
+                        const arma::vec& lam2,
+                        const uint& order,
+                        const uint& dist)
+{
+  const uint d = Z.n_cols;
+  const uint n = lam1.n_elem;
+  
+  arma::mat ab = get_ab(Z, theta, M);
+  
+  arma::vec sub_grad;
+  if(order > 0){
+    sub_grad.set_size(d);
+  } else{
+    sub_grad.set_size(1);
+  }
+  sub_grad.fill(0.0);
+  
+  arma::mat hess;
+  if(order > 1){
+    hess.set_size(d, d);
+  } else{
+    hess.set_size(1, 1);
+  }
+  hess.fill(0.0);
+  
+  double obj = obj_fun(ab.col(0), ab.col(1), theta, lam1, lam2, dist);
+  
+  arma::mat derivs_ab;
+  
+  if(order > 0){
+      derivs_ab = loglik_ab(ab.col(0), ab.col(1), dist, order);
+      for(size_t ii = 0; ii < n; ii++){
+        // Recall obj is -(1 / n) * loglik
+        sub_grad -= Z.row(2 * ii).t() * derivs_ab(1, ii) +
+          Z.row(2 * ii + 1).t() * derivs_ab(2, ii);
+      }
+      sub_grad *= 1.0 / n;
+      sub_grad += lam2 % theta + lam1 % arma::sign(theta);
+   }
+  if(order > 1){
+    arma::mat H(2, 2);
+    for(size_t ii = 0; ii < n; ii++){
+      H(0, 0) = derivs_ab(3, ii);
+      H(0, 1) = derivs_ab(4, ii);
+      H(1, 0) = H(0, 1);
+      H(1, 1) = derivs_ab(5, ii);
+      // Recall obj is -(1 / n) * loglik
+      hess -= Z.rows(2 * ii, 2 * ii + 1).t() * H * Z.rows(2 * ii, 2 * ii + 1);
+    }
+    hess *= 1.0 / n;
+    hess.diag() += lam2; 
+  }
+  return Rcpp::List::create(Rcpp::Named("obj") = obj, Rcpp::Named("sub_grad") =
+  sub_grad, Rcpp::Named("hessian") = hess);
 }
 
 arma::vec norm_logpdf_d(const double& x)
@@ -133,108 +242,28 @@ arma::vec norm_logpdf_d(const double& x)
   return out;
 }
 
-double lik_norm(double y, double yupp, const double& eta, const uint& order)
+arma::mat get_eta(const arma::mat& Z, const arma::vec& theta)
 {
-  double out;
-  // Center data
-  y -= eta;
-  yupp -= eta;
-  
-  // Make it so that |yupp| is always larger than |y| in computations
-  // Uses that R(b) - R(a) = R(-a) - R(-b) for normal cdf R
-  double sgn = 1.0;
-  if(std::abs(y) > std::abs(yupp)){
-    out = yupp;
-    yupp = -y;
-    y = -out;
-    sgn = -1.0;
+  const uint n = Z.n_rows / 2;
+  arma::mat eta(n, 2);
+  for(size_t ii = 0; ii < n; ii++){
+    eta.row(ii) = theta.t() * Z.rows(2 * ii, 2 * ii + 1).t(); 
   }
-  // Compute stably on log-scale
-  double logcdf = norm_logcdf(yupp) + log1mexp(norm_logcdf(yupp) - norm_logcdf(y));
-  out = logcdf;
-  if(order >= 1){
-    double pdf1 = norm_logpdf(yupp);
-    double pdf2 = norm_logpdf(y);
-    if(pdf1 >= pdf2){
-      out = -std::exp(-logcdf + pdf1 + log1mexp(pdf1 - pdf2));
-    } else{
-      out = std::exp(-logcdf + pdf2 + log1mexp(pdf2 - pdf1));
-    }
-    out *= sgn;
-  } 
-  if(order == 2){
-      out = (-out) * out;
-      arma::vec dpdf1 = norm_logpdf_d(yupp);
-      arma::vec dpdf2 = norm_logpdf_d(y);
-      if(arma::is_finite(dpdf1(0))){
-        out += dpdf1(1) * std::exp(dpdf1(0) - logcdf);
-      }
-      out -= dpdf2(1) * std::exp(dpdf2(0) - logcdf);
-  }
-  return out;
+  return eta;
 }
 
-arma::vec lik_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,const uint& order)
+arma::mat get_ab(const arma::mat& Z, const arma::vec& theta, 
+                 arma::mat M)
 {
-  for(uint ii = 0; ii < y.n_elem; ii++){
-    y(ii) = lik_norm(y(ii), yupp(ii), eta(ii), order);
+  const uint n = M.n_rows;
+  for(size_t ii = 0; ii < n; ii++){
+    if(std::isfinite(-M(ii, 0))){
+      M(ii, 0) += arma::as_scalar(Z.row(2 * ii) * theta);
+    }
+    if(std::isfinite(M(ii, 1))){
+      M(ii, 1) += arma::as_scalar(Z.row(2 * ii + 1) * theta);
+    }
   }
-  return y;
+  return M;
 }
-
-double obj_fun_norm(arma::vec y,const arma::vec& yupp, const arma::vec& eta,
-                  const arma::vec& b, const arma::vec& lam1, const arma::vec& lam2)
-{
-  double obj = -arma::mean(lik_norm(y, yupp, eta, 0));
-  obj += arma::sum(lam1 % arma::abs(b)) + 0.5 * arma::sum(lam2 %
-    arma::square(b));
-  return obj;
-}
-
-// [[Rcpp::export]]
-Rcpp::List obj_diff_cpp(const arma::vec& y, const arma::mat& X, const arma::vec& b, const
-arma::vec& yupp, const arma::vec& lam1, const arma::vec& lam2, const uint& order, const std::string dist)
-{
-  const uint p = X.n_cols;
-  arma::vec eta = X * b;
-  arma::mat hess(p, p, arma::fill::zeros);
-  arma::vec sub_grad(p, arma::fill::zeros);
-  arma::vec d_lik(p, arma::fill::zeros);
-  arma::vec dd_lik(p, arma::fill::zeros);
-  double obj;
-
-  if (dist == "ee"){
-      obj = obj_fun_ee(y, yupp, eta, b, lam1, lam2);
-    if(order > 0){
-      d_lik = lik_ee(y, yupp, eta, 1);
-      sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
-      sub_grad += lam2 % b + lam1 % arma::sign(b);
-    }
-    if(order > 1){
-      dd_lik = lik_ee(y, yupp, eta, 2);
-      hess = -X.t() * arma::diagmat(dd_lik * (1.0 / X.n_rows)) * X;
-      hess.diag() += lam2;
-    }
-  } else if (dist == "norm"){
-    obj = obj_fun_norm(y, yupp, eta, b, lam1, lam2);
-    if(order > 0){
-      d_lik = lik_norm(y, yupp, eta, 1);
-      sub_grad = -arma::mean(X.each_col() % d_lik, 0).t();
-      sub_grad += lam2 % b + lam1 % arma::sign(b);
-    }
-    if(order > 1){
-      dd_lik = lik_norm(y, yupp, eta, 2);
-      hess = -X.t() * arma::diagmat(dd_lik * (1.0 / X.n_rows)) * X;
-      hess.diag() += lam2;
-    }
-  } else{
-    // Add other dists here
-  }
-  
-  return Rcpp::List::create(Rcpp::Named("obj") = obj, Rcpp::Named("sub_grad") =
-  sub_grad, Rcpp::Named("hessian") = hess);
-}
-
-
-
 

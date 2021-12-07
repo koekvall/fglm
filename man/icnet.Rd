@@ -7,10 +7,13 @@
 icnet(
   Y,
   X,
-  b = rep(0, ncol(X)),
   lam = 1e-05,
   alpha = 0,
-  pen_factor = c(0, rep(1, ncol(X) - 1)),
+  pen_factor = NULL,
+  b = NULL,
+  s = NULL,
+  fix_s = FALSE,
+  box_constr = NULL,
   L = 10,
   maxit = rep(100, 3),
   tol = rep(1e-08, 2),
@@ -22,47 +25,54 @@ icnet(
 )
 }
 \arguments{
-\item{Y}{A matrix (n x 2) with two columns corresponding to lower and
-upper endpoints of response intervals (see details).}
+\item{Y}{Matrix of intervals containing latent responses.}
 
-\item{X}{A matrix (n x p) of predictors whose i:th row corresponds to the i:th
-element in y.}
+\item{X}{Model matrix (see details).}
 
-\item{b}{A vector of initial values for regression coefficients}
+\item{lam}{Vector (d x 1) of penalty parameters.}
 
-\item{lam}{A vector of penalty parameters to fit the model for}
+\item{alpha}{Scalar weight for elastic net (1 = lasso, 0 = ridge).}
 
-\item{alpha}{A scalar weight for elastic net (1 = lasso, 0 = ridge)}
+\item{pen_factor}{Vector (d x 1) of coefficient-specific penalty weights.}
 
-\item{pen_factor}{A vector of coefficient-specific penalty weights; defaults
-to 0 for first element of b and 1 for the remaining.}
+\item{b}{Vector of initial values for regression coefficients.}
 
-\item{L}{A scalar which if method = "fista" sets step-size 1 / L, which
-guarantees convergence if the objective function has an L-Lipschitz gradient}
+\item{s}{Scalar initial value for latent error variance.}
 
-\item{maxit}{A vector of maximum number of iterations (see details)}
+\item{fix_s}{Logical indicating whether to treat error variance as known.}
 
-\item{tol}{A vector of tolerances for FISTA or proximal Newton termination
-(see details)}
+\item{box_constr}{matrix (d x 2) of box constraints. Can be -Inf (first col.)
+or Inf (second col.)}
 
-\item{method}{Set to "fista" (FISTA) or "prox_newt" (proximal Newton)}
+\item{L}{Scalar setting step-size 1 / L if method = "fista".}
 
-\item{distr}{Set to "ee" for exponential distribution with log-link or "norm" for normal distribution.}
+\item{maxit}{Vector of maximum number of iterations (see details).}
 
-\item{verbose}{A logical which if TRUE means additional information may be
-printed}
+\item{tol}{Vector of tolerances for terminating algorithm (see details).}
 
-\item{acc}{A logical indicating whether to use acceleration when the FISTA
-algorithm is used}
+\item{method}{Method to use; "fista" or "prox_newt" (proximal Newton).}
 
-\item{nfold}{The number of folds in k-fold cross-validation; 1 corresponds
+\item{distr}{Distribution of latent responses; "ee" for exponential.
+distribution with log-link or "norm" for normal distribution with identity
+link.}
+
+\item{verbose}{Logical indicating whether additional information should be
+printed during fitting.}
+
+\item{acc}{Logical indicating whether to use acceleration if
+method = "fista".}
+
+\item{nfold}{Number of folds in k-fold cross-validation; 1 corresponds
 to no cross-validation.}
+
+\item{fix_var}{Logical indicating whether to treat latent error variance
+as fixed and known.}
 }
 \value{
 A matrix where each row correspond to a value of lam and the columns
-are coefficient estimates (1 - p), the value of lam (p + 1), the number of
-iterations required (p + 2), and whether zero is in the sub-differential at
-the final iterate (p + 3)
+are coefficient estimates (1 to d), the value of lam (d + 1), the number of
+iterations required (d + 2), and whether zero is in the sub-differential at
+the final iterate (d + 3)
 }
 \description{
 {
@@ -73,16 +83,21 @@ the final iterate (p + 3)
 }
 \details{
 {
-  The model assumes the observed data comprise predictor and an interval
-  containing a latent, unobservable variable. The first column in Y is
-  the lower endpoint of the interval and the second columns is the upper.
+  
+ The likelihood for the ith observation is
+  
+    log(R(bi) - R(ai))
+    
+ where ai = s * Y[ii, 1] - t(X[ii, ]) %*% b and 
+ bi = s * Y[ii, 2] - t(X[ii, ]) %*% b.
 
-  If method = "fista", then only the first elements of maxit and tol are
-  used. If method = "prox_newt", then the first element of maxit is the
-  maximum number of Newton iterations, the second is the maximum number of
-  line search iterations for each Newton update, and the third is the maximum
-  number of coordinate descent iterations within each Newton update. The
-  first element of tol is for terminating the Newton iterations and the second
-  for terminating the coordinate descent updates within each Newton
-  iteration.}
+  
+ If method = "fista", then only the first elements of maxit and tol are
+ used. If method = "prox_newt", then the first element of maxit is the
+ maximum number of Newton iterations, the second is the maximum number of
+ line search iterations for each Newton update, and the third is the maximum
+ number of coordinate descent iterations within each Newton update. The
+ first element of tol is for terminating the Newton iterations and the second
+ for terminating the coordinate descent updates within each Newton
+ iteration.}
 }
