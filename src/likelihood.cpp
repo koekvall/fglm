@@ -180,7 +180,7 @@ Rcpp::List obj_diff_cpp(const arma::mat& Z,
                         const uint& dist)
 {
   const uint d = Z.n_cols;
-  const uint n = lam1.n_elem;
+  const uint n = M.n_rows;
   
   arma::mat ab = get_ab(Z, theta, M);
   
@@ -208,8 +208,8 @@ Rcpp::List obj_diff_cpp(const arma::mat& Z,
       derivs_ab = loglik_ab(ab.col(0), ab.col(1), dist, order);
       for(size_t ii = 0; ii < n; ii++){
         // Recall obj is -(1 / n) * loglik
-        sub_grad -= Z.row(2 * ii).t() * derivs_ab(1, ii) +
-          Z.row(2 * ii + 1).t() * derivs_ab(2, ii);
+        sub_grad -= (Z.row(2 * ii).t() * derivs_ab(1, ii) +
+          Z.row(2 * ii + 1).t() * derivs_ab(2, ii));
       }
       sub_grad *= 1.0 / n;
       sub_grad += lam2 % theta + lam1 % arma::sign(theta);
