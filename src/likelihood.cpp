@@ -5,32 +5,101 @@
 #include <RcppArmadillo.h>
 #include "normal.h"
 
-// The log-likelihood for one observation is log[R(yupp - eta) - R(y - eta)],
-// where eta = x'beta and R is the CDF of the latent variable.
-// The extreme value CDF is R(t) = exp(-exp(-t)).
+// The log-likelihood for one observation is
+//       log[R(b(y, x, theta)) - R(a(y, x, theta))],
+// a < b are affine functions of theta the for every (y, x) and R is a
+// log-concave CDF. For example, the extreme value CDF is
+// R(t) = exp(-exp(-t)).
 
-// All likelihood derivatives are with respect to eta.
+// Likelihood derivatives are with respect a and b. Those derivatives are
+// defined to equal zero if evaluated at, respectively, a = -infty or
+// b = infty.
 
 
-double lik_ee(double y, const double& yupp, const double& eta, const uint& order)
+double log_lik_ab(double a, double b, const uint& dist,
+                      const bool& logarithm)
 {
-  const double infty = std::numeric_limits<double>::infinity();
-  double theta = std::exp(eta);
-  double out = -y * theta;
-  if(yupp < infty){
-    y = yupp - y;
-    if(order == 0){
-      out += log1mexp(y * theta);
-    } else if(order == 1){
-      y = log(y) + eta - y * theta - log1mexp(y * theta);
-      out += exp(y);
+  double out = 0.0;
+  if(dist == 1){ // Extreme value latent CDF
+    if (std::isfinite(-a) & std::isfinite(b)){
+      out = -std::exp(a) + log1mexp(std::exp(b) - std::exp(a));
+    } else if (std::isfinite(-a)){
+      out = -std::exp(a);
+    } else if (std::isfinite(b)){
+      out = log1mexp(std::exp(b));
     } else{
-      double log_scale = 2.0 * eta - y * theta + 2.0 * std::log(y);
-      log_scale -= 2.0 * log1mexp(y * theta);
-      log_scale += std::log1p(std::exp(-eta - y * theta -
-        std::log(y)) - std::exp(-eta - std::log(y)));
-      out -= exp(log_scale);
+      out = -R_NegInf;
     }
+  } else if (dist == 2){ // Normal latent cdf
+    if(std::isfinite(-a) & std::isfinite(b)){
+      // Make it so that |b| is always larger than |a| in computations
+      // Uses that R(b) - R(a) = R(-a) - R(-b) for normal cdf R
+      double sgn = 1.0;
+      if(std::abs(a) > std::abs(b)){
+        out = b;
+        b = -a;
+        a = -out;
+      }
+      out = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
+    } else if (std::isfinite(-a)){
+      out = log1mexp(-norm_logcdf(a));
+    } else if (std::isfinite(b)){
+      out = norm_logcdf(b);
+    } else{
+      out = -R_NegInf;
+    }
+  } else{
+    // add other distributions here
+  }
+  
+  if(!logarithm){
+    out = std::exp(out);
+  }
+  return out;
+}
+
+arma::vec score_ab(double a, double b, const uint& dist)
+{
+  arma::vec out(2);
+  if(dist == 1){ // Extreme value latent CDF
+    if (std::isfinite(-a) & std::isfinite(b)){
+      double c = log1mexp(std::exp(b) - std::exp(a));
+      out(0) = a - c;
+      out(1) = b - std::exp(b) + std::exp(a) - c;
+    } else if (std::isfinite(-a)){
+      out(0) = a;
+      out(1) = 0.0;
+    } else if (std::isfinite(b)){
+      out(0) = 0.0;
+      out(1) = b - std::exp(b) - log1mexp(std::exp(b));
+    } else{
+      out = -R_NegInf;
+    }
+  } else if (dist == 2){ // Normal latent cdf
+    if(std::isfinite(-a) & std::isfinite(b)){
+      // Make it so that |b| is always larger than |a| in computations
+      // Uses that R(b) - R(a) = R(-a) - R(-b) for normal cdf R
+      double sgn = 1.0;
+      if(std::abs(a) > std::abs(b)){
+        out = b;
+        b = -a;
+        a = -out;
+        sign = -1.0
+      }
+      out = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
+    } else if (std::isfinite(-a)){
+      out = log1mexp(-norm_logcdf(a));
+    } else if (std::isfinite(b)){
+      out = norm_logcdf(b);
+    } else{
+      out = -R_NegInf;
+    }
+  } else{
+    // add other distributions here
+  }
+  
+  if(!logarithm){
+    out = std::exp(out);
   }
   return out;
 }

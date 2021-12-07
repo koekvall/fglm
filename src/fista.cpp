@@ -3,15 +3,15 @@
 #include "likelihood.h"
 
 // [[Rcpp::export]]
-Rcpp::List fista(const arma::vec& y, const arma::mat& X, const arma::vec& yupp,
-                 const arma::vec& lam1, const arma::vec& lam2, arma::vec b,
+Rcpp::List fista(const arma::vec& y, const arma::vec& yupp, const arma::mat& Z
+                 const arma::vec& lam1, const arma::vec& lam2, arma::vec theta,
                  const uint& maxit, const double& tol, const double& L,
                  const bool& verbose, const bool& acc,const std::string& dist)
 {
-  const uint p = X.n_cols;
-  arma::vec b_bar = b;
-  arma::vec b_old = b;
-  arma::vec grad;
+  const uint d = Z.n_cols;
+  arma::vec theta_bar = theta;
+  arma::vec theta_old = theta;
+  arma::mat grad;
   double t_old = 1.0;
   double t_new = 1.0;
   double obj;
