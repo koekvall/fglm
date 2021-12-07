@@ -33,7 +33,6 @@ arma::vec loglik_ab(const double& a, const double& b, const uint& dist,
   arma::vec out(6, arma::fill::zeros);
   const bool a_fin = std::isfinite(-a);
   const bool b_fin = std::isfinite(b);
-  double c; // storage used for different things
   if(dist == 1){ // Extreme value latent CDF
     
     // Do value first first; if statements not technically necessary but
@@ -62,21 +61,19 @@ arma::vec loglik_ab(const double& a, const double& b, const uint& dist,
       if(a_fin){
         out(3) = - out(1) * out(1);
         if(a < 0){
-          c = log1mexp(-a);
+          out(3) -= std::exp(a - std::exp(a) + log1mexp(-a) - out(0));
         } else{
-          c = std::log(std::expm1(a));
+          out(3) += std::exp(2 * a - std::exp(a) + log1mexp(a) - out(0));
         }
-        out(3) += -arma::sign(a) * std::exp(a - std::exp(a) + c);
       }
       
       if(b_fin){
         out(5) = -out(2) * out(2);
         if(b < 0){
-          c = log1mexp(-b);
+          out(5) += std::exp(b - std::exp(b) + log1mexp(-b) - out(0));
         } else{
-          c = std::log(std::expm1(b));
+          out(5) -= std::exp(2.0 * b - std::exp(b) + log1mexp(b) - out(0));
         }
-        out(5) += -arma::sign(b) * std::exp(b - std::exp(b) + c);
       }
       // faster than checking if finite; will be zero is a or b is not finite
       out(4) = -out(1) * out(2);
