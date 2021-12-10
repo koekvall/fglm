@@ -309,7 +309,7 @@ icnet <- function(Y,
                       pen_factor = pen_factor, b = b, s = s, fix_s = fix_s,
                       box_constr = box_constr, L = L, maxit = maxit, tol = tol,
                       method = method, distr = distr, verbose = verbose,
-                      acc = acc, nfold = nfold)
+                      acc = acc, nfold = 1)
     full_fit <- cbind(full_fit, "cv_err" = cv_err)
     b <- full_fit[best_idx, 2:(p + 1)]
     s <- full_fit[best_idx, 1]
