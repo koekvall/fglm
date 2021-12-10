@@ -62,21 +62,21 @@ arma::vec newton_step(const arma::mat& Z,
     H(0, 1) = -ab_diffs(4, ii);
     H(1, 0) = H(0, 1);
     H(1, 1) = -ab_diffs(5, ii);
+    
     l_const += Z.rows(ii * 2, ii * 2 + 1).t() * g;
+    
     q_const += arma::sum(Z.rows(ii * 2, ii * 2 + 1) %
       (H *  Z.rows(ii * 2, ii * 2 + 1)), 0).t();
   }
   l_const *= 1.0 / n;
-  l_const += theta_old % lam2;
   q_const *= 1.0 / n;
-  q_const += 1.0 * lam2;
+  q_const += lam2;
 
   // start coordinate descent
   for(int ll = 0; ll < maxit; ++ll){
     // here, eta_jkl stores current eta. Compute current penalized quadratic value
     double newt_obj = quad_approx(linpred, linpred_old, ab_diffs, lam2, theta,
       theta_old) + arma::sum(lam1 % arma::abs(theta));
-
     // update terms changing in coordinate descent iterations
     for(size_t jj = 0; jj < d; ++jj){
       //compute part of objective varying in coordinate descent iterations
@@ -90,14 +90,14 @@ arma::vec newton_step(const arma::mat& Z,
         // updated in CD iterations. At first iterations this is Z_1^1 theta_1
         arma::vec v = linpred_old.row(ii).t() - linpred.row(ii).t() +
          Z.submat(2 * ii, jj, 2 * ii + 1, jj) * theta(jj);
-        l_change += arma::as_scalar(Z.submat(2 * ii, jj, 2 * ii + 1, jj).t() *
+        l_change -= arma::as_scalar(Z.submat(2 * ii, jj, 2 * ii + 1, jj).t() *
           H * v);
       }
       l_change *= 1.0 / n;
       double theta_j = theta(jj);
       theta(jj) = solve_constr_l1(l_const(jj) + l_change, q_const(jj),
         constr(jj, 0), constr(jj, 1), lam1(jj));
-      // prepare to update next coordinate by updating current linear predcitor
+      // prepare to update next coordinate by updating current linear predictor
       linpred += get_eta(Z.col(jj), theta.subvec(jj, jj) - theta_j);
     }
     // calculate difference in penalized quadratic after one pass
@@ -121,7 +121,7 @@ arma::vec newton_step(const arma::mat& Z,
 // [[Rcpp::export]]
 Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1,
                  const arma::vec& lam2, arma::vec theta, const arma::mat& constr,
-                 const arma::uvec& maxit, const arma::uvec& tol,
+                 const arma::ivec& maxit, const arma::vec& tol,
                  const bool& verbose, const int& dist)
 {
   const size_t n = M.n_rows;
@@ -179,12 +179,13 @@ Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& la
       Rcpp::Rcout << "Change in objective from iteration " << kk + 1 <<
         ": " << obj_new - obj << std::endl;
     }
-
+    
     if(abs(obj - obj_new) < tol(0)){
       newton_iter = kk + 1;
       break;
     }
     obj = obj_new;
+    
   } // end Newton iteration
   return Rcpp::List::create(Rcpp::Named("theta") = theta, Rcpp::Named("iter") = newton_iter);
 }

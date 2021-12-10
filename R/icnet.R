@@ -217,7 +217,6 @@ icnet <- function(Y,
                            tol = tol,
                            verbose = verbose,
                            dist = distr_num)
-          browser()
       }
       # Current estimate is used as starting value for next lambda
       theta <- fit[["theta"]]
