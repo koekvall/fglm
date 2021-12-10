@@ -5,8 +5,8 @@ fista <- function(Z, M, lam1, lam2, theta, constr, maxit, tol, L, verbose, acc, 
     .Call(`_icnet_fista`, Z, M, lam1, lam2, theta, constr, maxit, tol, L, verbose, acc, dist)
 }
 
-loglik_ab <- function(a, b, dist, order) {
-    .Call(`_icnet_loglik_ab`, a, b, dist, order)
+loglik_ab <- function(a, b, order, dist) {
+    .Call(`_icnet_loglik_ab`, a, b, order, dist)
 }
 
 obj_fun <- function(a, b, theta, lam1, lam2, dist) {
@@ -27,5 +27,9 @@ solve_constr_l1 <- function(a, b, c1, c2, lam) {
 
 log1mexp <- function(x) {
     .Call(`_icnet_log1mexp`, x)
+}
+
+prox_newt <- function(Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist) {
+    .Call(`_icnet_prox_newt`, Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist)
 }
 

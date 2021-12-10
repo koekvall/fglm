@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // fista
-Rcpp::List fista(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, arma::vec theta, const arma::mat& constr, const uint& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc, const uint& dist);
+Rcpp::List fista(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, arma::vec theta, const arma::mat& constr, const int& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc, const int& dist);
 RcppExport SEXP _icnet_fista(SEXP ZSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -23,32 +23,32 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
     Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type constr(constrSEXP);
-    Rcpp::traits::input_parameter< const uint& >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const int& >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< const double& >::type L(LSEXP);
     Rcpp::traits::input_parameter< const bool& >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< const bool& >::type acc(accSEXP);
-    Rcpp::traits::input_parameter< const uint& >::type dist(distSEXP);
+    Rcpp::traits::input_parameter< const int& >::type dist(distSEXP);
     rcpp_result_gen = Rcpp::wrap(fista(Z, M, lam1, lam2, theta, constr, maxit, tol, L, verbose, acc, dist));
     return rcpp_result_gen;
 END_RCPP
 }
 // loglik_ab
-arma::mat loglik_ab(const arma::vec& a, const arma::vec& b, const uint& dist, const uint& order);
-RcppExport SEXP _icnet_loglik_ab(SEXP aSEXP, SEXP bSEXP, SEXP distSEXP, SEXP orderSEXP) {
+arma::mat loglik_ab(const arma::vec& a, const arma::vec& b, const int& order, const int& dist);
+RcppExport SEXP _icnet_loglik_ab(SEXP aSEXP, SEXP bSEXP, SEXP orderSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type b(bSEXP);
-    Rcpp::traits::input_parameter< const uint& >::type dist(distSEXP);
-    Rcpp::traits::input_parameter< const uint& >::type order(orderSEXP);
-    rcpp_result_gen = Rcpp::wrap(loglik_ab(a, b, dist, order));
+    Rcpp::traits::input_parameter< const int& >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< const int& >::type dist(distSEXP);
+    rcpp_result_gen = Rcpp::wrap(loglik_ab(a, b, order, dist));
     return rcpp_result_gen;
 END_RCPP
 }
 // obj_fun
-double obj_fun(const arma::vec& a, const arma::vec& b, const arma::vec& theta, const arma::vec& lam1, const arma::vec& lam2, const uint& dist);
+double obj_fun(const arma::vec& a, const arma::vec& b, const arma::vec& theta, const arma::vec& lam1, const arma::vec& lam2, const int& dist);
 RcppExport SEXP _icnet_obj_fun(SEXP aSEXP, SEXP bSEXP, SEXP thetaSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -58,13 +58,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type theta(thetaSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type lam1(lam1SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
-    Rcpp::traits::input_parameter< const uint& >::type dist(distSEXP);
+    Rcpp::traits::input_parameter< const int& >::type dist(distSEXP);
     rcpp_result_gen = Rcpp::wrap(obj_fun(a, b, theta, lam1, lam2, dist));
     return rcpp_result_gen;
 END_RCPP
 }
 // obj_diff_cpp
-Rcpp::List obj_diff_cpp(const arma::mat& Z, const arma::vec& theta, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, const uint& order, const uint& dist);
+Rcpp::List obj_diff_cpp(const arma::mat& Z, const arma::vec& theta, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, const int& order, const int& dist);
 RcppExport SEXP _icnet_obj_diff_cpp(SEXP ZSEXP, SEXP thetaSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP orderSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -74,8 +74,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type lam1(lam1SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
-    Rcpp::traits::input_parameter< const uint& >::type order(orderSEXP);
-    Rcpp::traits::input_parameter< const uint& >::type dist(distSEXP);
+    Rcpp::traits::input_parameter< const int& >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< const int& >::type dist(distSEXP);
     rcpp_result_gen = Rcpp::wrap(obj_diff_cpp(Z, theta, M, lam1, lam2, order, dist));
     return rcpp_result_gen;
 END_RCPP
@@ -118,6 +118,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// prox_newt
+Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, arma::vec theta, const arma::mat& constr, const arma::uvec& maxit, const arma::uvec& tol, const bool& verbose, const int& dist);
+RcppExport SEXP _icnet_prox_newt(SEXP ZSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP distSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lam1(lam1SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lam2(lam2SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type constr(constrSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< const int& >::type dist(distSEXP);
+    rcpp_result_gen = Rcpp::wrap(prox_newt(Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_icnet_fista", (DL_FUNC) &_icnet_fista, 12},
@@ -127,6 +147,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_icnet_soft_t", (DL_FUNC) &_icnet_soft_t, 2},
     {"_icnet_solve_constr_l1", (DL_FUNC) &_icnet_solve_constr_l1, 5},
     {"_icnet_log1mexp", (DL_FUNC) &_icnet_log1mexp, 1},
+    {"_icnet_prox_newt", (DL_FUNC) &_icnet_prox_newt, 10},
     {NULL, NULL, 0}
 };
 

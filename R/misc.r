@@ -50,8 +50,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #' Generate data
 #'
 #'@description{
-#' Interval censored responses from the normal distribution with mean X %*% b
-#' and variance 1.
+#' Interval censored responses from the normal distribution with mean X %*% b.
 #' }
 #'
 #' @param X An n x p design matrix
@@ -60,6 +59,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #'  means integer support (see details)
 #' @param ymax An upper bound on the observable response (see details)
 #' @param ymin A lower bound on the observable response
+#' @param sigma Standard deviation of latent normal variable.
 #'
 #' @return A matrix with n rows and 3 columns; the first is the lower endpoint
 #'  of the observed interval and the second the upper endpoint (see details).
@@ -75,7 +75,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
 #'  }
 #'
 #' @export
-generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5){
+generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5, sigma = 1){
   # Do argument checking
   stopifnot(is.matrix(X))
   p <- ncol(X)
@@ -84,8 +84,10 @@ generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5){
   stopifnot(is.numeric(d), length(d) == 1, d > 0)
   stopifnot(is.numeric(ymax), length(ymax) == 1, ymax >= 0)
   stopifnot(is.numeric(ymin), length(ymin) == 1, ymin <= 0)
+  stopifnot(is.numeric(sigma), is.atomic(sigma), length(sigma) %in% c(1, n),
+            all(sigma > 0))
   eta <- X %*% b
-  w <- stats::rnorm(n, mean = eta)
+  w <- stats::rnorm(n, mean = eta, sd = sigma)
   neg_idx <- w < 0
   y <- abs(w)
   y <- floor(y / d) * d # nearest smaller multiple of d
