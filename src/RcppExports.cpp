@@ -118,6 +118,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// start_profiler
+SEXP start_profiler(SEXP str);
+RcppExport SEXP _icnet_start_profiler(SEXP strSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type str(strSEXP);
+    rcpp_result_gen = Rcpp::wrap(start_profiler(str));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stop_profiler
+SEXP stop_profiler();
+RcppExport SEXP _icnet_stop_profiler() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(stop_profiler());
+    return rcpp_result_gen;
+END_RCPP
+}
 // prox_newt
 Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, arma::vec theta, const arma::mat& constr, const arma::ivec& maxit, const arma::vec& tol, const bool& verbose, const int& dist);
 RcppExport SEXP _icnet_prox_newt(SEXP ZSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP distSEXP) {
@@ -147,6 +168,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_icnet_soft_t", (DL_FUNC) &_icnet_soft_t, 2},
     {"_icnet_solve_constr_l1", (DL_FUNC) &_icnet_solve_constr_l1, 5},
     {"_icnet_log1mexp", (DL_FUNC) &_icnet_log1mexp, 1},
+    {"_icnet_start_profiler", (DL_FUNC) &_icnet_start_profiler, 1},
+    {"_icnet_stop_profiler", (DL_FUNC) &_icnet_stop_profiler, 0},
     {"_icnet_prox_newt", (DL_FUNC) &_icnet_prox_newt, 10},
     {NULL, NULL, 0}
 };

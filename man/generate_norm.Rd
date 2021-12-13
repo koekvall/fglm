@@ -4,7 +4,7 @@
 \alias{generate_norm}
 \title{Generate data}
 \usage{
-generate_norm(X, b, d = 1, ymax = 5, ymin = -5)
+generate_norm(X, b, d = 1, ymax = 5, ymin = -5, sigma = 1)
 }
 \arguments{
 \item{X}{An n x p design matrix}
@@ -17,6 +17,8 @@ means integer support (see details)}
 \item{ymax}{An upper bound on the observable response (see details)}
 
 \item{ymin}{A lower bound on the observable response}
+
+\item{sigma}{Standard deviation of latent normal variable.}
 }
 \value{
 A matrix with n rows and 3 columns; the first is the lower endpoint
@@ -25,8 +27,7 @@ A matrix with n rows and 3 columns; the first is the lower endpoint
 }
 \description{
 {
-Interval censored responses from the normal distribution with mean X %*% b
-and variance 1.
+Interval censored responses from the normal distribution with mean X %*% b.
 }
 }
 \details{

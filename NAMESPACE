@@ -3,6 +3,7 @@
 export(generate_ee)
 export(generate_norm)
 export(icnet)
+export(icnet_gen)
 export(obj_diff)
 importFrom(Rcpp,evalCpp)
 importFrom(Rcpp,sourceCpp)

@@ -282,7 +282,7 @@ icnet <- function(Y,
         }
         # Store mis-classification rate (pred of latent var. outside interval)
         cv_mat[ii, jj] <- mean((pred < Y[-fit_idx, 1]) | pred >= Y[-fit_idx, 2])
-        # If at largest lambda, store sum of b to use average as starting value
+        # If at largest lambda, store sum of theta to use average as starting value
         if(ii == 1){
           theta_large <- theta_large + theta
         }
@@ -303,8 +303,6 @@ icnet <- function(Y,
     cv_err <- rowMeans(cv_mat) # Average mis-classification rate for each lam
     best_idx <- which.min(cv_err)
     lam_star <- lam[best_idx]
-    # Get average estimate over all folds as starting value for full fit
-    theta <- theta_large / nfold # This is currently superfluous
     full_fit <- icnet(Y = Y, X = X, lam = lam, alpha = alpha,
                       pen_factor = pen_factor, b = b, s = s, fix_s = fix_s,
                       box_constr = box_constr, L = L, maxit = maxit, tol = tol,

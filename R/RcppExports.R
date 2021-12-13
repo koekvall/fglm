@@ -29,6 +29,14 @@ log1mexp <- function(x) {
     .Call(`_icnet_log1mexp`, x)
 }
 
+start_profiler <- function(str) {
+    .Call(`_icnet_start_profiler`, str)
+}
+
+stop_profiler <- function() {
+    .Call(`_icnet_stop_profiler`)
+}
+
 prox_newt <- function(Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist) {
     .Call(`_icnet_prox_newt`, Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist)
 }

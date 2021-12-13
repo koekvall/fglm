@@ -67,6 +67,9 @@ arma::vec loglik_ab(const double& a, const double& b, const int& order,
         }
       }
 
+      // faster than checking if finite; will be zero is a or b is not finite
+      out(4) = -out(1) * out(2);
+
       if(b_fin){
         out(5) = -out(2) * out(2);
         if(b < 0){
@@ -75,8 +78,6 @@ arma::vec loglik_ab(const double& a, const double& b, const int& order,
           out(5) -= std::exp(2.0 * b - std::exp(b) + log1mexp(b) - out(0));
         }
       }
-      // faster than checking if finite; will be zero is a or b is not finite
-      out(4) = -out(1) * out(2);
     }
 
   } else if (dist == 2){ // Normal latent cdf
@@ -111,20 +112,199 @@ arma::vec loglik_ab(const double& a, const double& b, const int& order,
         out(3) -= dens_deriv(1) * std::exp(dens_deriv(0) - out(0));
       }
 
+      // faster than checking if finite; will be zero is a or b is not finite
+      out(4) = -out(1) * out(2);
+
       if(b_fin){
         dens_deriv = norm_logpdf_d(b);
         out(5) = - out(2) * out(2);
         out(5) += dens_deriv(1) * std::exp(dens_deriv(0) - out(0));
       }
 
-      // faster than checking if finite; will be zero is a or b is not finite
-      out(4) = -out(1) * out(2);
     }
   } else{
     // add other distributions here
   }
   return out;
 }
+
+// loglik_ab without order option for speed, order = 0 assumed
+double loglik_ab_val(const double& a, const double& b, const int& dist)
+{
+  double out = 0.0;
+  const bool a_fin = std::isfinite(-a);
+  const bool b_fin = std::isfinite(b);
+  if(dist == 1){ // Extreme value latent CDF
+    if (a_fin & b_fin){
+      out = -std::exp(a) + log1mexp(std::exp(b) - std::exp(a));
+    } else if(a_fin){ // b = infty
+      out = -std::exp(a);
+    } else if(b_fin){ // a = -infty
+      out = log1mexp(std::exp(b));
+    }
+  } else if (dist == 2){ // Normal latent cdf
+    if (a_fin & b_fin){
+      out = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
+    } else if(a_fin){ // b = infty
+      out = log1mexp(-norm_logcdf(a));
+    } else if(b_fin){ // a = -infty
+      out = norm_logcdf(b);
+    }
+  } else{
+    // add other distributions here
+  }
+  return out;
+}
+
+// loglik_ab without order option for speed, order = 1 assumed
+arma::vec loglik_ab_grad(const double& a, const double& b,
+                    const int& dist)
+{
+  arma::vec out(2);
+  double obj = 0.0;
+  const bool a_fin = std::isfinite(-a);
+  const bool b_fin = std::isfinite(b);
+  if(dist == 1){ // Extreme value latent CDF
+    // Do value first first; if statements not technically necessary but
+    // may save time.
+    if (a_fin & b_fin){
+      obj = -std::exp(a) + log1mexp(std::exp(b) - std::exp(a));
+    } else if(a_fin){ // b = infty
+      obj = -std::exp(a);
+    } else if(b_fin){ // a = -infty
+      obj = log1mexp(std::exp(b));
+    }
+
+    // Do gradient
+    if(a_fin){
+      out(0) = -std::exp(a - std::exp(a) - obj);
+    }
+
+    if(b_fin){
+      out(1) = std::exp(b - std::exp(b) - obj);
+    }
+
+  } else if (dist == 2){ // Normal latent cdf
+
+    // Do value first first; if statements not technically necessary but
+    // may save time.
+    if (a_fin & b_fin){
+      obj = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
+    } else if(a_fin){ // b = infty
+      obj = log1mexp(-norm_logcdf(a));
+    } else if(b_fin){ // a = -infty
+      obj = norm_logcdf(b);
+    }
+
+    // Do gradient
+    if(a_fin){
+      out(0) = -std::exp(norm_logpdf(a) - obj);
+    }
+
+    if(b_fin){
+      out(1) =  std::exp(norm_logpdf(b) - obj);
+    }
+
+  } else{
+    // add other distributions here
+  }
+  return out;
+}
+
+// loglik_ab without order option for speed, order = 1 assumed
+arma::vec loglik_ab_hess(const double& a, const double& b,
+                    const int& dist)
+{
+  arma::mat hess(3, 2, arma::fill::zeros);
+  double obj;
+  const bool a_fin = std::isfinite(-a);
+  const bool b_fin = std::isfinite(b);
+  if(dist == 1){ // Extreme value latent CDF
+
+    // Do value first first; if statements not technically necessary but
+    // may save time.
+    if (a_fin & b_fin){
+      obj = -std::exp(a) + log1mexp(std::exp(b) - std::exp(a));
+    } else if(a_fin){ // b = infty
+      obj = -std::exp(a);
+    } else if(b_fin){ // a = -infty
+      obj = log1mexp(std::exp(b));
+    }
+
+      if(a_fin){
+        hess(2, 0) = -std::exp(a - std::exp(a) - obj);
+      }
+
+      if(b_fin){
+        hess(2, 1) = std::exp(b - std::exp(b) - obj);
+      }
+
+      if(a_fin){
+        hess(0, 0) = - hess(2, 0) * hess(2, 0);
+        if(a < 0){
+          hess(0, 0) -= std::exp(a - std::exp(a) + log1mexp(-a) - obj);
+        } else{
+          hess(0, 0) += std::exp(2 * a - std::exp(a) + log1mexp(a) - obj);
+        }
+      }
+
+      // faster than checking if finite; will be zero is a or b is not finite
+      hess(1, 0) = -hess(2, 0) * hess(2, 1);
+
+      if(b_fin){
+        hess(1, 1) = -hess(2, 1) * hess(2, 1);
+        if(b < 0){
+          hess(1, 1) += std::exp(b - std::exp(b) + log1mexp(-b) - obj);
+        } else{
+          hess(1, 1) -= std::exp(2.0 * b - std::exp(b) + log1mexp(b) - obj);
+        }
+      }
+
+
+  } else if (dist == 2){ // Normal latent cdf
+
+    // Do value first first; if statements not technically necessary but
+    // may save time.
+    if (a_fin & b_fin){
+      obj = norm_logcdf(b) + log1mexp(norm_logcdf(b) - norm_logcdf(a));
+    } else if(a_fin){ // b = infty
+      obj = log1mexp(-norm_logcdf(a));
+    } else if(b_fin){ // a = -infty
+      obj = norm_logcdf(b);
+    }
+
+    // Gradient
+    if(a_fin){
+      hess(2, 0) = -std::exp(norm_logpdf(a) - obj);
+    }
+
+    if(b_fin){
+      hess(2, 1) =  std::exp(norm_logpdf(b) - obj);
+    }
+
+    // Hessian
+    arma::vec dens_deriv(2);
+    if(a_fin){
+      dens_deriv = norm_logpdf_d(a);
+      hess(0, 0) = -hess(2, 0) * hess(2, 0);
+      hess(0, 0) -= dens_deriv(1) * std::exp(dens_deriv(0) - obj);
+    }
+
+    // faster than checking if finite; will be zero is a or b is not finite
+    hess(1, 0) = -hess(2, 0) * hess(2, 1);
+    hess(0, 1) = hess(1, 0);
+
+    if(b_fin){
+      dens_deriv = norm_logpdf_d(b);
+      hess(1, 1) = - std::pow(hess(2, 1), 2.0);
+      hess(1, 1) += dens_deriv(1) * std::exp(dens_deriv(0) - obj);
+    }
+  } else{
+    // add other distributions here
+  }
+  return hess;
+}
+
 
 // Vectorized version of loglik_ab for double arguments; see that
 // function for argument explanations.
@@ -156,17 +336,53 @@ arma::mat loglik_ab(const arma::vec& a, const arma::vec& b, const int& order,
   return out;
 }
 
+// Vectorized version of loglik_ab_val for double arguments; see that
+// function for argument explanations.
+arma::vec loglik_ab_val(const arma::vec& a, const arma::vec& b,
+                    const int& dist)
+{
+  const size_t n = a.n_elem;
+  arma::vec out(n);
+  for(size_t ii = 0; ii < n; ii++){
+    out(ii) = loglik_ab_val(a(ii), b(ii), dist);
+  }
+  return out;
+}
 
-arma::vec loglik_grad(const arma::mat& Z, const arma::mat& ab_diffs)
+// Vectorized version of loglik_ab_grad for double arguments; see that
+// function for argument explanations.
+arma::vec loglik_ab_grad(const arma::vec& a, const arma::vec& b,
+                        const int& dist)
+{
+  const size_t n = a.n_elem;
+  arma::vec out(2 * n);
+  for(size_t ii = 0; ii < n; ii++){
+    out.subvec(2 * ii, 2 * ii + 1) = loglik_ab_grad(a(ii), b(ii), dist);
+  }
+  return out;
+}
+
+// Vectorized version of loglik_ab_hess for double arguments; see that
+// function for argument explanations.
+arma::vec loglik_ab_hess(const arma::vec& a, const arma::vec& b,
+                         const int& dist)
+{
+  const size_t n = a.n_elem;
+  arma::mat out(6, n);
+  for(size_t ii = 0; ii < n; ii++){
+    out.col(ii) = loglik_ab_hess(a(ii), b(ii), dist);
+  }
+  return out;
+}
+
+
+arma::vec loglik_grad(const arma::mat& Z, const arma::mat& ab_grad)
 {
   const size_t d = Z.n_cols;
-  const size_t n = ab_diffs.n_cols;
+  const size_t n = ab_grad.n_cols;
 
-  arma::vec grad(d, arma::fill::zeros);
-    for(size_t ii = 0; ii < n; ii++){
-      grad += (Z.row(2 * ii).t() * ab_diffs(1, ii) +
-        Z.row(2 * ii + 1).t() * ab_diffs(2, ii));
-    }
+  arma::vec grad = Z.t() * ab_grad;
+
   return grad;
 }
 
