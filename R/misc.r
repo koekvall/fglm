@@ -37,7 +37,7 @@ generate_ee <- function(X, b, d = 1, ymax = 10){
     d <- ymax
   }
 
-  eta <- X %*% b
+  eta <- -X %*% b
   w <- stats::rexp(n = nrow(X), rate = exp(eta))
   y <- floor(w / d) * d # nearest smaller multiple of d
   yupp <- y + d
