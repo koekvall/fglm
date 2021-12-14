@@ -127,7 +127,6 @@ Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& la
   const size_t n = M.n_rows;
 
   arma::mat ab = get_ab(Z, theta, M);
-  
   int newton_iter;
   for(int kk = 0; kk < maxit(0); ++kk){
     // Compute key quantities at current point
@@ -137,7 +136,6 @@ Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& la
     // Get proposed Newton step
     arma::vec theta_bar = newton_step(Z, ab, ab_diffs, lam1, lam2, theta, constr,
       maxit(2), tol(1), verbose, dist);
-
     // Do linesearch if requested; otherwise use raw Newton step (s_size = 1)
     double s_size = 1.0;
     if(maxit(1) > 0){

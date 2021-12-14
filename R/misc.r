@@ -106,25 +106,18 @@ generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5, sigma = 1){
 
 #' Evaluate objective function and its derivatives
 #'
-#' @description{The objective function is that of an elastic net-penalized negative
-#'  log-likelihood corresponding to a latent exponential generalized linear model
-#'  with natural parameter exp(X b).
-#' }
-#'
-#' @param y A vector of n observed responses (see details in fit_ee)
-#' @param X An n x p matrix of predictors
-#' @param b A vector of p regression coefficients
-#' @param yupp A vector of n upper endpoints of intervals corresponding to y
-#'   (see details in fit_ee)
-#' @param lam A scalar penalty parameter
-#' @param alpha A scalar weight for elastic net (1 = lasso, 0 = ridge)
-#' @param pen_factor A vector of coefficient-specific penalty weights; defaults
-#' to 0 for first element of b and 1 for the remaining.
-#' @param order An integer where 0 means only value is computed; 1 means both value
-#'   and sub-gradient; and 2 means value, sub-gradient, and Hessian (see details)
-#' @param dist String indicating which distribution to use, currently supports
-#'  Exponential with log-link ("ee") and normal with identity link ("norm")
-#' @return A list with elements "obj", "grad", and "hessian" (see details)
+#' @param Y Matrix of intervals containing latent responses.
+#' @param X Model matrix.
+#' @param lam Vector (d x 1) of penalty parameters.
+#' @param alpha Scalar weight for elastic net (1 = lasso, 0 = ridge).
+#' @param pen_factor Vector (d x 1) of coefficient-specific penalty weights.
+#' @param b Vector (p x 1) of regression coefficients.
+#' @param s Latent error standard deviation.
+#' @param distr Distribution of latent responses; "ee" for exponential.
+#'   distribution with log-link or "norm" for normal distribution with identity
+#'   link.
+#' @param order Order of derivatives to compute (0, 1, or 2)
+#' @return A list with elements "obj", "grad", and "hessian".
 #'
 #' @details{
 #'  When order = 0, the gradient and Hessian elements of the return list are set
@@ -138,23 +131,58 @@ generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5, sigma = 1){
 #'  objective function
 #' }
 #' @export
-obj_diff <- function(y, X, b, yupp, lam = 0, alpha = 1, pen_factor = c(0, rep(1,
-  ncol(X) - 1)), order, dist){
-  # Do argument checking
-  stopifnot(is.matrix(X))
-  p <- ncol(X)
-  n <- nrow(X)
-  stopifnot(is.numeric(b), length(b) == p)
-  stopifnot(is.numeric(y), is.null(dim(y)), length(y) == n)
-  stopifnot(is.numeric(yupp), is.null(dim(yupp)), length(yupp) == n)
-  stopifnot(is.numeric(lam), length(lam) == 1)
-  stopifnot(is.numeric(alpha), length(alpha) == 1,
-            alpha >= 0, alpha <= 1)
-  stopifnot(is.numeric(pen_factor), is.null(dim(pen_factor)),
-            length(pen_factor) == p)
-  stopifnot(is.numeric(order), length(order) == 1, order %in% 0:2)
-  stopifnot(is.character(dist), length(dist) == 1, dist %in% c("ee", "norm"))
+obj_fun_icnet <- function(Y,
+                          X,
+                          lam = 1e-5,
+                          alpha = 0,
+                          pen_factor = NULL,
+                          b,
+                          s = NULL,
+                          distr = "norm", 
+                          order = 0)
+{
+  #############################################################################
+  # Argument checking
+  #############################################################################
+  stopifnot(is.matrix(X), is.numeric(X),
+            is.matrix(Y), is.numeric(Y), ncol(Y) == 2)
+  stopifnot(is.numeric(lam), is.atomic(lam), all(lam >= 0))
+  stopifnot(is.numeric(alpha), is.atomic(alpha), length(alpha) == 1, alpha <= 1,
+            alpha >= 0)
+  stopifnot(is.character(distr), is.atomic(distr), length(distr) == 1,
+            distr %in% c("ee", "norm"))
+  distr_num <- c(1, 2)[distr == c("ee", "norm")]
+  stopifnot(is.atomic(order), length(order) == 1, order %in% 0:2)
 
-  obj_diff_cpp(y, X, b, yupp, lam1 = alpha * lam * pen_factor, lam2 = (1 -
-  alpha) * lam * pen_factor, order, dist)
+  n <- nrow(Y)
+  stopifnot(nrow(X) == n)
+  p <- ncol(X)
+  stopifnot(is.numeric(b), is.atomic(b), length(b) == p)
+  # Set latent stdev to 1 by default
+  if(is.null(s)){
+    s <- 1
+  } else{
+    stopifnot(is.numeric(s), is.atomic(s), length(s) == 1, s > 0)
+  }
+  d <- p + 1
+  Z <- cbind(as.vector(t(Y)), kronecker(-X, c(1, 1)))
+  Z[!is.finite(Z)] <- 0
+  M <- Y
+  M[is.finite(M)] <- 0
+  theta <- c(1 / s, b / s)
+
+  # By default, coefficients are penalized but not latent prevision
+  if(is.null(pen_factor)){
+    pen_factor <- c(0, rep(1, p))
+  }
+  stopifnot(is.numeric(pen_factor), is.atomic(pen_factor), 
+              length(pen_factor) == d, all(pen_factor >= 0))
+  
+  obj_diff_cpp(Z = Z,
+               theta = c(s, b),
+               M = M,
+               lam1 = lam * alpha * pen_factor,
+               lam2 = lam * (1 - alpha) * pen_factor,
+               order = order,
+               dist = distr_num)
 }

@@ -13,7 +13,7 @@
 #' @param pen_factor Vector (d x 1) of coefficient-specific penalty weights.
 #' @param b Vector of initial values for regression coefficients.
 #' @param s Scalar initial value for latent error standard deviation.
-#' @param fix_s Logical indicating whether to treat error standard deviation
+#' @param fix_var Logical indicating whether to treat error standard deviation
 #'   as known.
 #' @param box_constr matrix (d x 2) of box constraints. Can be -Inf (first col.)
 #'   or Inf (second col.).
@@ -69,7 +69,7 @@ icnet <- function(Y,
                   pen_factor = NULL,
                   b = NULL,
                   s = NULL,
-                  fix_s = TRUE,
+                  fix_var = TRUE,
                   box_constr = NULL,
                   L = 10,
                   maxit = rep(1e2, 3),
@@ -100,7 +100,7 @@ icnet <- function(Y,
   distr_num <- c(1, 2)[distr == c("ee", "norm")]
   stopifnot(is.logical(verbose), is.atomic(verbose), length(verbose) == 1)
   stopifnot(is.logical(acc), is.atomic(acc), length(acc) == 1)
-  stopifnot(is.logical(fix_s), is.atomic(fix_s), length(fix_s) == 1)
+  stopifnot(is.logical(fix_var), is.atomic(fix_var), length(fix_var) == 1)
   
   n <- nrow(Y)
   stopifnot(nrow(X) == n)
@@ -121,7 +121,7 @@ icnet <- function(Y,
   
   # Number of parameters to estimate d depends on whether latent error stdev
   # is fixed.
-  if(fix_s){
+  if(fix_var){
       d <- p
       Z <- kronecker(-X, c(1, 1))
       theta <- b * (1 / s)
@@ -129,6 +129,7 @@ icnet <- function(Y,
   } else{
       d <- p + 1
       Z <- cbind(as.vector(t(Y)), kronecker(-X, c(1, 1)))
+      Z[!is.finite(Z)] <- 0
       M <- Y
       M[is.finite(M)] <- 0
       theta <- c(1 / s, b / s)
@@ -143,14 +144,14 @@ icnet <- function(Y,
   }
   
   # Constrain precision parameter to be positive
-  if(!fix_s){
+  if(!fix_var){
     box_constr[1, 1] <- sqrt(.Machine$double.eps)
     stopifnot(box_constr[1, 2] > box_constr[1, 1])
   }
   
   # By default, coefficients are penalized but not latent prevision
   if(is.null(pen_factor)){
-    if(fix_s){
+    if(fix_var){
       pen_factor <- rep(1, p)
     } else{
       pen_factor <- c(0, rep(1, p)) # Do not penalize precision
@@ -220,7 +221,7 @@ icnet <- function(Y,
       }
       # Current estimate is used as starting value for next lambda
       theta <- fit[["theta"]]
-      if(fix_s){
+      if(fix_var){
         b <- theta * s
       } else{
         s <- 1 / theta[1]
@@ -304,7 +305,7 @@ icnet <- function(Y,
     best_idx <- which.min(cv_err)
     lam_star <- lam[best_idx]
     full_fit <- icnet(Y = Y, X = X, lam = lam, alpha = alpha,
-                      pen_factor = pen_factor, b = b, s = s, fix_s = fix_s,
+                      pen_factor = pen_factor, b = b, s = s, fix_var = fix_var,
                       box_constr = box_constr, L = L, maxit = maxit, tol = tol,
                       method = method, distr = distr, verbose = verbose,
                       acc = acc, nfold = 1)

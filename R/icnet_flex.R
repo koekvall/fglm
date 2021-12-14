@@ -1,4 +1,4 @@
-#'Elastic-net regression for general interval censored latent variables
+#'Elastic-net regression for flexible interval censored latent variables
 #'
 #' @description{
 #'   Minimizes an elastic net-penalized negative log-likelihood for interval
@@ -27,8 +27,6 @@
 #'   method = "fista".
 #' @param nfold Number of folds in k-fold cross-validation; 1 corresponds
 #'   to no cross-validation.
-#' @param fix_var Logical indicating whether to treat latent error variance
-#'   as fixed and known.
 #' @return A matrix where each row correspond to a value of lam and the columns
 #' are coefficient estimates (1 to d), the value of lam (d + 1), the number of
 #' iterations required (d + 2), and whether zero is in the sub-differential at
@@ -58,7 +56,7 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom Rcpp evalCpp
 #' @export
-icnet_gen <- function(M,
+icnet_flex <- function(M,
                    Z,
                    theta,
                    lam = 1e-5,
@@ -147,9 +145,9 @@ icnet_gen <- function(M,
       }
       # Current estimate is used as starting value for next lambda
       theta <- fit[["theta"]]
-      out[ii, 1:(p + 1)] <- theta
-      out[ii, p + 2] <- lam[ii]
-      out[ii, p + 3] <- fit[["iter"]]
+      out[ii, 1:d] <- theta
+      out[ii, d + 1] <- lam[ii]
+      out[ii, d + 2] <- fit[["iter"]]
 
       # Check if zero in sub-differential
       zero_idx <- theta == 0
@@ -164,15 +162,15 @@ icnet_gen <- function(M,
       is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <=
                                (alpha * lam[ii] * pen_factor[zero_idx]))
       # Did algo terminate before maxit?
-      early <-  out[ii, p + 3] < maxit[1]
+      early <-  out[ii, d + 2] < maxit[1]
       if(is_KKT & early){ # All is well
-        out[ii, p + 4] <- 0
+        out[ii, d + 3] <- 0
       } else if(is_KKT & !early){
-        out[ii, p + 4] <- 1 # Found min on sqrt() tolerance but reached maxit
+        out[ii, d + 3] <- 1 # Found min on sqrt() tolerance but reached maxit
       } else if(!is_KKT & !early){ # Did not find min and reached maxit
-        out[ii, p + 4] <- 2
+        out[ii, d + 3] <- 2
       } else{ # Terminated early but did not find min
-        out[ii, p + 4] <- 3
+        out[ii, d + 3] <- 3
       }
     } # End loop over lam
   return(out)

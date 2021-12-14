@@ -381,8 +381,11 @@ arma::vec loglik_grad(const arma::mat& Z, const arma::mat& ab_grad)
   const size_t d = Z.n_cols;
   const size_t n = ab_grad.n_cols;
 
-  arma::vec grad = Z.t() * ab_grad;
-
+  arma::vec grad(d, arma::fill::zeros);
+  for(size_t ii = 0; ii < n; ii++){
+    grad += (Z.row(2 * ii).t() * ab_grad(1, ii) +
+      Z.row(2 * ii + 1).t() * ab_grad(2, ii));
+  }
   return grad;
 }
 

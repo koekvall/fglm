@@ -12,7 +12,7 @@ icnet(
   pen_factor = NULL,
   b = NULL,
   s = NULL,
-  fix_s = TRUE,
+  fix_var = TRUE,
   box_constr = NULL,
   L = 10,
   maxit = rep(100, 3),
@@ -39,8 +39,8 @@ icnet(
 
 \item{s}{Scalar initial value for latent error standard deviation.}
 
-\item{fix_s}{Logical indicating whether to treat error standard deviation
-as known.}
+\item{fix_var}{Logical indicating whether to treat latent error variance
+as fixed and known.}
 
 \item{box_constr}{matrix (d x 2) of box constraints. Can be -Inf (first col.)
 or Inf (second col.).}
@@ -65,9 +65,6 @@ method = "fista".}
 
 \item{nfold}{Number of folds in k-fold cross-validation; 1 corresponds
 to no cross-validation.}
-
-\item{fix_var}{Logical indicating whether to treat latent error variance
-as fixed and known.}
 }
 \value{
 A matrix where each row correspond to a value of lam and the columns
