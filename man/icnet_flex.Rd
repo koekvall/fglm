@@ -2,7 +2,7 @@
 % Please edit documentation in R/icnet_flex.R
 \name{icnet_flex}
 \alias{icnet_flex}
-\title{Elastic-net regression for general interval censored latent variables}
+\title{Elastic-net regression for flexible interval censored latent variables}
 \usage{
 icnet_flex(
   M,

@@ -17,8 +17,12 @@
 #'   as known.
 #' @param box_constr matrix (d x 2) of box constraints. Can be -Inf (first col.)
 #'   or Inf (second col.).
-#' @param maxit Vector of maximum number of iterations.
-#' @param tol Vector of tolerances for terminating algorithm.
+#' @param maxit Vector of maximum number of iterations. If method = "prox_newt",
+#'  maxit[1] for Newton, maxit[2] for linesearch, and maxit[3] for coordinate
+#'  descent within each Newton step.
+#' @param tol Vector of tolerances for terminating algorithm. If method = 
+#'   "prox_newt", tol[1] is for Newton and tol[2] for coordinate descent within
+#'   Newton.
 #' @param method Method to use; "fista" or "prox_newt" (proximal Newton).
 #' @param distr Distribution of latent responses; "ee" for exponential.
 #'   distribution with log-link or "norm" for normal distribution with identity
@@ -88,20 +92,30 @@ icnet <- function(Y,
   stopifnot(is.numeric(lam), is.atomic(lam), all(lam >= 0))
   stopifnot(is.numeric(alpha), is.atomic(alpha), length(alpha) == 1, alpha <= 1,
             alpha >= 0)
-  stopifnot(is.numeric(L), is.atomic(L), length(L) == 1, L > 0)
-  stopifnot(is.numeric(maxit), is.atomic(maxit), all(maxit >= 0),
-            length(maxit) %in% c(1, 3))
-  stopifnot(is.numeric(tol), is.atomic(tol), all(tol > 0),
-            length(tol) == 2 | method == "fista")
+
   stopifnot(is.character(method), is.atomic(method), length(method) == 1, 
             method %in% c("fista", "prox_newt"))
   stopifnot(is.character(distr), is.atomic(distr), length(distr) == 1,
             distr %in% c("ee", "norm"))
   distr_num <- c(1, 2)[distr == c("ee", "norm")]
-  stopifnot(is.logical(verbose), is.atomic(verbose), length(verbose) == 1)
-  stopifnot(is.logical(acc), is.atomic(acc), length(acc) == 1)
-  stopifnot(is.logical(fix_var), is.atomic(fix_var), length(fix_var) == 1)
   
+  if(method == "fista"){
+    stopifnot(is.numeric(L), is.atomic(L), length(L) == 1, L > 0)
+    stopifnot(is.numeric(maxit), is.atomic(maxit), all(maxit >= 0),
+              length(maxit) >= 1)
+    stopifnot(is.numeric(tol), is.atomic(tol), all(tol > 0),
+              length(tol) >= 1)
+    stopifnot(is.logical(acc), is.atomic(acc), length(acc) == 1)
+  } else{
+    stopifnot(is.numeric(maxit), is.atomic(maxit), all(maxit >= 0),
+              length(maxit) == 3)
+    stopifnot(is.numeric(tol), is.atomic(tol), all(tol > 0),
+              length(tol) == 2)
+  }
+  
+  stopifnot(is.logical(verbose), is.atomic(verbose), length(verbose) == 1)
+  stopifnot(is.logical(fix_var), is.atomic(fix_var), length(fix_var) == 1)
+
   n <- nrow(Y)
   stopifnot(nrow(X) == n)
   p <- ncol(X)
@@ -149,7 +163,7 @@ icnet <- function(Y,
     stopifnot(box_constr[1, 2] > box_constr[1, 1])
   }
   
-  # By default, coefficients are penalized but not latent prevision
+  # By default, coefficients are penalized but not latent precision
   if(is.null(pen_factor)){
     if(fix_var){
       pen_factor <- rep(1, p)

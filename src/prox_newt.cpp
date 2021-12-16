@@ -36,7 +36,8 @@ arma::vec newton_step(const arma::mat& Z,
                       const arma::mat& ab,
                       const arma::mat& ab_diffs,
                       const arma::vec& lam1,
-                      const arma::vec& lam2, arma::vec theta,
+                      const arma::vec& lam2,
+                      arma::vec theta,
                       const arma::mat& constr,
                       const int& maxit,
                       const double& tol,
@@ -71,7 +72,6 @@ arma::vec newton_step(const arma::mat& Z,
   l_const *= 1.0 / n;
   q_const *= 1.0 / n;
   q_const += lam2;
-
   // start coordinate descent
   for(int ll = 0; ll < maxit; ++ll){
     // here, eta_jkl stores current eta. Compute current penalized quadratic value
@@ -115,7 +115,7 @@ arma::vec newton_step(const arma::mat& Z,
       Rcpp::warning("Coordinate descent reached maxit");
     }
   }
-  return(theta);
+  return theta;
 }
 
 // [[Rcpp::export]]
@@ -125,7 +125,6 @@ Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& la
                  const bool& verbose, const int& dist)
 {
   const size_t n = M.n_rows;
-
   arma::mat ab = get_ab(Z, theta, M);
   int newton_iter;
   for(int kk = 0; kk < maxit(0); ++kk){
@@ -134,8 +133,17 @@ Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& la
     double obj = obj_fun(ab.col(0), ab.col(1), theta, lam1, lam2, dist);
     double obj_new = obj;
     // Get proposed Newton step
-    arma::vec theta_bar = newton_step(Z, ab, ab_diffs, lam1, lam2, theta, constr,
-      maxit(2), tol(1), verbose, dist);
+    arma::vec theta_bar = newton_step(Z,
+                                       ab,
+                                       ab_diffs,
+                                       lam1,
+                                       lam2,
+                                       theta,
+                                       constr,
+                                       maxit(2),
+                                       tol(1),
+                                       verbose,
+                                       dist);
     // Do linesearch if requested; otherwise use raw Newton step (s_size = 1)
     double s_size = 1.0;
     if(maxit(1) > 0){
@@ -164,7 +172,6 @@ Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& la
         line_iter++;
       } // end linesearch iteration
     } // end if linesearch
-
     // update to new point
     theta += s_size * theta_bar;
 

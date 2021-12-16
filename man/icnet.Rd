@@ -47,9 +47,13 @@ or Inf (second col.).}
 
 \item{L}{Scalar setting step-size 1 / L if method = "fista".}
 
-\item{maxit}{Vector of maximum number of iterations.}
+\item{maxit}{Vector of maximum number of iterations. If method = "prox_newt",
+maxit[1] for Newton, maxit[2] for linesearch, and maxit[3] for coordinate
+descent within each Newton step.}
 
-\item{tol}{Vector of tolerances for terminating algorithm.}
+\item{tol}{Vector of tolerances for terminating algorithm. If method = 
+"prox_newt", tol[1] is for Newton and tol[2] for coordinate descent within
+Newton.}
 
 \item{method}{Method to use; "fista" or "prox_newt" (proximal Newton).}
 
