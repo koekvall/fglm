@@ -375,7 +375,7 @@ arma::vec loglik_ab_hess(const arma::vec& a, const arma::vec& b,
   return out;
 }
 
-
+// [[Rcpp::export]]
 arma::vec loglik_grad(const arma::mat& Z, const arma::mat& ab_grad)
 {
   const size_t d = Z.n_cols;
@@ -476,6 +476,7 @@ arma::vec norm_logpdf_d(const double& x)
   return out;
 }
 
+// [[Rcpp::export]]
 arma::mat get_eta(const arma::mat& Z, const arma::vec& theta)
 {
   const size_t n = Z.n_rows / 2;
@@ -486,6 +487,7 @@ arma::mat get_eta(const arma::mat& Z, const arma::vec& theta)
   return eta;
 }
 
+// [[Rcpp::export]]
 arma::mat get_ab(const arma::mat& Z, const arma::vec& theta,
                  arma::mat M)
 {

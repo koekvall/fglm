@@ -9,12 +9,24 @@ loglik_ab <- function(a, b, order, dist) {
     .Call(`_icnet_loglik_ab`, a, b, order, dist)
 }
 
+loglik_grad <- function(Z, ab_grad) {
+    .Call(`_icnet_loglik_grad`, Z, ab_grad)
+}
+
 obj_fun <- function(a, b, theta, lam1, lam2, dist) {
     .Call(`_icnet_obj_fun`, a, b, theta, lam1, lam2, dist)
 }
 
 obj_diff_cpp <- function(Z, theta, M, lam1, lam2, order, dist) {
     .Call(`_icnet_obj_diff_cpp`, Z, theta, M, lam1, lam2, order, dist)
+}
+
+get_eta <- function(Z, theta) {
+    .Call(`_icnet_get_eta`, Z, theta)
+}
+
+get_ab <- function(Z, theta, M) {
+    .Call(`_icnet_get_ab`, Z, theta, M)
 }
 
 soft_t <- function(x, lam) {
@@ -35,6 +47,14 @@ start_profiler <- function(str) {
 
 stop_profiler <- function() {
     .Call(`_icnet_stop_profiler`)
+}
+
+quad_appr_ll <- function(linpred, linpred_old, ab_diffs) {
+    .Call(`_icnet_quad_appr_ll`, linpred, linpred_old, ab_diffs)
+}
+
+newton_step <- function(Z, ab, ab_diffs, lam1, lam2, theta, constr, maxit, tol, verbose, dist) {
+    .Call(`_icnet_newton_step`, Z, ab, ab_diffs, lam1, lam2, theta, constr, maxit, tol, verbose, dist)
 }
 
 prox_newt <- function(Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist) {

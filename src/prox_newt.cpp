@@ -2,36 +2,36 @@
 #include "misc.h"
 #include "likelihood.h"
 
-double quad_approx(arma::mat linpred, const arma::mat& linpred_old,
-  const arma::mat& ab_diffs, const arma::vec& lam2, const arma::vec& theta,
-  const arma::vec theta_old)
+// [[Rcpp::export]]
+double quad_appr_ll(arma::mat linpred,
+                    const arma::mat& linpred_old,
+                    const arma::mat& ab_diffs)
 {
   const size_t n = linpred.n_rows;
 
   // for convenience
   linpred -= linpred_old;
-  double q = 0.0;
+  double q = arma::sum(ab_diffs.row(0));
   arma::mat H(2, 2);
   arma:: vec g(2);
   for(size_t ii = 0; ii < n; ii++){
     // linear part
-    g(0) = -ab_diffs(1, ii);
-    g(1) = -ab_diffs(2, ii);
+    g(0) = ab_diffs(1, ii);
+    g(1) = ab_diffs(2, ii);
     q += arma::sum(g % linpred.row(ii).t());
 
     // quadratic part
-    H(0, 0) = -ab_diffs(3, ii);
-    H(0, 1) = -ab_diffs(4, ii);
+    H(0, 0) = ab_diffs(3, ii);
+    H(0, 1) = ab_diffs(4, ii);
     H(1, 0) = H(0, 1);
-    H(1, 1) = -ab_diffs(5, ii);
+    H(1, 1) = ab_diffs(5, ii);
 
     q += 0.5 * arma::as_scalar(linpred.row(ii) * H * linpred.row(ii).t());
   }
-  q *= 1.0 / n;
-  q += 0.5 * arma::sum(lam2 % arma::square(theta));
   return q;
 }
 
+// [[Rcpp::export]]
 arma::vec newton_step(const arma::mat& Z,
                       const arma::mat& ab,
                       const arma::mat& ab_diffs,
@@ -46,16 +46,18 @@ arma::vec newton_step(const arma::mat& Z,
 {
   const size_t d = Z.n_cols;
   const size_t n = ab.n_rows;
-  const arma::vec theta_old = theta;
   arma::mat linpred = get_eta(Z, theta); // Updated in coordinate descent
   const arma::mat linpred_old = linpred; // eta^k in paper notation
-
+  
+  /////////////////////////////////////////////////////////////////////////////
   // calculate constant terms in univariate quadratic L1 problems
   //      min_{theta_j} {theta_j * l_j + 0.5 * theta_j^2 * q_j + lam1 |theta_j|}
+  /////////////////////////////////////////////////////////////////////////////
   arma::vec l_const(d, arma::fill::zeros);
   arma::vec q_const(d, arma::fill::zeros);
   arma::mat H(2, 2);
   arma::vec g(2);
+  
   for(size_t ii = 0; ii < n; ii++){
     g(0) = -ab_diffs(1, ii); // 0th element of ab_diffs is log-lik value
     g(1) = -ab_diffs(2, ii);
@@ -66,20 +68,26 @@ arma::vec newton_step(const arma::mat& Z,
     
     l_const += Z.rows(ii * 2, ii * 2 + 1).t() * g;
     
-    q_const += arma::sum(Z.rows(ii * 2, ii * 2 + 1) %
-      (H *  Z.rows(ii * 2, ii * 2 + 1)), 0).t();
+    q_const += arma::sum((Z.rows(ii * 2, ii * 2 + 1).t() * H) %
+      Z.rows(ii * 2, ii * 2 + 1).t(), 1);
   }
   l_const *= 1.0 / n;
   q_const *= 1.0 / n;
   q_const += lam2;
-  // start coordinate descent
-  for(int ll = 0; ll < maxit; ++ll){
-    // here, eta_jkl stores current eta. Compute current penalized quadratic value
-    double newt_obj = quad_approx(linpred, linpred_old, ab_diffs, lam2, theta,
-      theta_old) + arma::sum(lam1 % arma::abs(theta));
-    // update terms changing in coordinate descent iterations
+  /////////////////////////////////////////////////////////////////////////////
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // Coordinate descent
+  /////////////////////////////////////////////////////////////////////////////
+  for(int kk = 0; kk < maxit; ++kk){
+
+    double newt_obj = (-1.0 / n) * quad_appr_ll(linpred, linpred_old, ab_diffs) +
+      0.5 * arma::sum(lam2 % arma::square(theta)) +
+      arma::sum(lam1 % arma::abs(theta));
+    
+    // Update theta(jj), jj = 0, ... d - 1.
     for(size_t jj = 0; jj < d; ++jj){
-      //compute part of objective varying in coordinate descent iterations
+      // Compute part of linear term in obj. changing in coordinate descent
       double l_change = 0.0;
       for(size_t ii = 0; ii < n; ii++){
         H(0, 0) = -ab_diffs(3, ii);
@@ -94,27 +102,38 @@ arma::vec newton_step(const arma::mat& Z,
           H * v);
       }
       l_change *= 1.0 / n;
+      
+      // Store current theta_j for adjusting linear predictor
       double theta_j = theta(jj);
+      
+      // Solve coordinate descent problem
       theta(jj) = solve_constr_l1(l_const(jj) + l_change, q_const(jj),
         constr(jj, 0), constr(jj, 1), lam1(jj));
-      // prepare to update next coordinate by updating current linear predictor
+      
+      // Update the linear predictor by subtracting old and adding new
       linpred += get_eta(Z.col(jj), theta.subvec(jj, jj) - theta_j);
-    }
+      
+    } // end loop over coordinates of theta
+    
     // calculate difference in penalized quadratic after one pass
-    newt_obj -= quad_approx(linpred, linpred_old, ab_diffs, lam2, theta,
-      theta_old) + arma::sum(lam1 % arma::abs(theta));
+    newt_obj -= (-1.0 / n) * quad_appr_ll(linpred, linpred_old, ab_diffs) +
+      arma::sum(lam1 % arma::abs(theta)) +
+        0.5 * arma::sum(lam2 % arma::square(theta));
 
     if(verbose){
       Rcpp::Rcout << "Decrease from CD: " << newt_obj << std::endl;
     }
+    
     if(std::abs(newt_obj) < tol){
       break;
     }
 
-    if((ll == (maxit - 1)) & verbose){
+    if((kk == (maxit - 1)) & verbose){
       Rcpp::warning("Coordinate descent reached maxit");
     }
-  }
+    
+  } // end coordinate descent loop
+  
   return theta;
 }
 

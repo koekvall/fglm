@@ -30,36 +30,13 @@ arma::vec soft_t(arma::vec x, const arma::vec& lam)
 double solve_constr_l1(const double& a, const double& b, const double& c1, 
                        const double& c2, const double& lam)
 {
-  double sol;
-  if((std::abs(a) <= lam) & (c1 <= 0.0) & (c2 >= 0.0)){
-    sol = 0.0;
-  } else if (c1 >= 0.0){ // positive interval
-    if(a > -(lam + c1 * b)){
-      sol = c1;
-    } else if(((-c2 * b - lam) <= a) & (a < -lam)){
-      sol= (-a - lam) / b;
-    } else{
-      sol= c2;
-    }
-  } else if(c2 <= 0.0){ // negative interval
-    if(a > (lam - c1 * b)){
-      sol = c1;
-    } else if((a > lam) & (a <= (lam - c1 * b))){
-      sol = (lam - a) / b;
-    } else{
-      sol = c2;
-    }
-  } else{ // mixed interval
-    if(a > (lam - c1 * b)){
-      sol = c1;
-    } else if((a > lam) & (a < (lam - c1 * b))){
-      sol  = (lam - a) / b;
-    } else if((a < -lam) & (a >= (-lam - c2 * b))){
-      sol = (-a - lam) /b;
-    } else{
-      sol = c2;
-    }
+  double sol = soft_t(-a, lam) / b;
+  if(sol > c2){
+    sol = c2;
+  } else if(sol < c1){
+    sol = c1;
   }
+  
   return sol;
 }
 
