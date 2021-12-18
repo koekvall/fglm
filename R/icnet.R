@@ -315,7 +315,7 @@ icnet <- function(Y,
   # If cross-validating, prepare output and get best fit for full data
   #############################################################################
   if(nfold > 1){
-    cv_err <- rowMeans(cv_mat) # Average mis-classification rate for each lam
+    cv_err <- rowMeans(cv_mat) # Average misclassification rate for each lam
     best_idx <- which.min(cv_err)
     lam_star <- lam[best_idx]
     full_fit <- icnet(Y = Y, X = X, lam = lam, alpha = alpha,

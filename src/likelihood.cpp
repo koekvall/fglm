@@ -3,7 +3,7 @@
 #include <cmath>
 #include <RcppArmadillo.h>
 #include "normal.h"
-
+#include "math.h"
 // The log-likelihood for one observation is
 //       log[R(b(y, x, theta)) - R(a(y, x, theta))],
 // a < b are affine functions of theta the for every (y, x) and R is a
@@ -60,10 +60,10 @@ arma::vec loglik_ab(const double& a, const double& b, const int& order,
     if(order > 1){ // Hessian
       if(a_fin){
         out(3) = - out(1) * out(1);
-        if(a < 0){
-          out(3) -= std::exp(a - std::exp(a) + log1mexp(-a) - out(0));
+        if(a <= 0){
+          out(3) += std::expm1(a) * std::exp(a - std::exp(a) - out(0));
         } else{
-          out(3) += std::exp(2 * a - std::exp(a) + log1mexp(a) - out(0));
+          out(3) -=  std::expm1(-a) * std::exp(2 * a - std::exp(a) - out(0));
         }
       }
 
@@ -72,10 +72,10 @@ arma::vec loglik_ab(const double& a, const double& b, const int& order,
 
       if(b_fin){
         out(5) = -out(2) * out(2);
-        if(b < 0){
-          out(5) += std::exp(b - std::exp(b) + log1mexp(-b) - out(0));
+        if(b <= 0){
+          out(5) -= std::expm1(b) * std::exp(b - std::exp(b) - out(0));
         } else{
-          out(5) -= std::exp(2.0 * b - std::exp(b) + log1mexp(b) - out(0));
+          out(5) += std::expm1(-b) * std::exp(2.0 * b - std::exp(b) - out(0));
         }
       }
     }

@@ -39,6 +39,8 @@ Rcpp::List fista(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1,
 
   int iter = 0;
   bool iterate = true;
+  arma::uvec active(d, arma::fill::ones);
+  bool last_pass = false;
   while(iterate){
     if(verbose){
       ab = get_ab(Z, theta, M);
@@ -52,9 +54,14 @@ Rcpp::List fista(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1,
 
     // update theta
     for(size_t jj = 0; jj < d; jj++){
-      theta(jj) = solve_constr_l1(grad(jj) - L * theta_bar(jj), L, constr(jj, 0),
-            constr(jj, 1), lam1(jj));
-      u += std::abs(theta_old(jj) - theta(jj));
+      if(active(jj)){
+        theta(jj) = solve_constr_l1(grad(jj) - L * theta_bar(jj), L, constr(jj, 0),
+              constr(jj, 1), lam1(jj));
+        u += std::abs(theta_old(jj) - theta(jj));
+        if(theta(jj) == 0.0){
+          active(jj) = 0;
+        }
+      }
     }
 
     // Check convergence
@@ -65,9 +72,16 @@ Rcpp::List fista(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1,
       Rcpp::Rcout << "Objective change: " << -obj << std::endl;
     }
     if((u / d) < tol){
-      break;
+      if(!last_pass){
+        active.fill(1);
+        last_pass = true;
+      } else{
+        break; 
+      }
+    } else{
+      last_pass = false;
     }
-
+    
     if(iter == (maxit - 1)){
       Rcpp::warning("maxit reached before convergence");
       iter++;
@@ -75,6 +89,7 @@ Rcpp::List fista(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1,
     }
 
     // Prepare next iteration
+  
     theta_old = theta;
 
     if(acc){
