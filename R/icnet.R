@@ -201,8 +201,9 @@ icnet <- function(Y,
       # Use all data for fitting if not cross-validating
       fit_idx <- 1:n
       fit_idx_Z <- c(rbind(2 * (fit_idx - 1) + 1, 2 * (fit_idx - 1) + 2))
-      out <- matrix(NA, nrow = nlam, ncol = p + 5)
-      colnames(out) <- c("s", paste0("b", 1:p), "lam", "iter", "conv", "err")
+      out <- matrix(NA, nrow = nlam, ncol = p + 7)
+      colnames(out) <- c("s", paste0("b", 1:p), "lam", "iter", "conv", "err",
+                         "obj", "loglik")
     }
     for(ii in 1:nlam){
       #########################################################################
@@ -282,6 +283,13 @@ icnet <- function(Y,
         } else{ # Terminated early but did not find min
           out[ii, p + 4] <- 3
         }
+        
+        out[ii, p + 6] <- derivs$obj
+        out[ii, p + 7] <- derivs$obj -
+                          sum(alpha * lam[ii] * pen_factor * abs(theta)) -
+                          0.5 * sum(alpha * lam[ii] * pen_factor * theta^2)
+        out[ii, p + 7] <- out[ii, p + 7] * (-n)
+        
       } # End if nfold == 1
       #########################################################################
       
