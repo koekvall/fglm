@@ -18,8 +18,7 @@ icnet_flex(
   method = "prox_newt",
   distr = "norm",
   verbose = FALSE,
-  acc = TRUE,
-  nfold = 1
+  acc = TRUE
 )
 }
 \arguments{
@@ -29,7 +28,7 @@ icnet_flex(
 
 \item{theta}{Starting values for parameter vector (d x 1).}
 
-\item{lam}{Vector (d x 1) of penalty parameters.}
+\item{lam}{Scalar penalty parameter.}
 
 \item{alpha}{Scalar weight for elastic net (1 = lasso, 0 = ridge).}
 
@@ -55,9 +54,6 @@ printed during fitting.}
 
 \item{acc}{Logical indicating whether to use acceleration if
 method = "fista".}
-
-\item{nfold}{Number of folds in k-fold cross-validation; 1 corresponds
-to no cross-validation.}
 }
 \value{
 A matrix where each row correspond to a value of lam and the columns

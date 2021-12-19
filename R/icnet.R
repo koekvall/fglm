@@ -8,7 +8,7 @@
 #'
 #' @param Y Matrix of intervals containing latent responses.
 #' @param X Model matrix.
-#' @param lam Vector (d x 1) of penalty parameters.
+#' @param lam Scalar penalty parameter.
 #' @param alpha Scalar weight for elastic net (1 = lasso, 0 = ridge).
 #' @param pen_factor Vector (d x 1) of coefficient-specific penalty weights.
 #' @param b Vector of initial values for regression coefficients.

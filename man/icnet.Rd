@@ -29,7 +29,7 @@ icnet(
 
 \item{X}{Model matrix.}
 
-\item{lam}{Vector (d x 1) of penalty parameters.}
+\item{lam}{Scalar penalty parameter.}
 
 \item{alpha}{Scalar weight for elastic net (1 = lasso, 0 = ridge).}
 

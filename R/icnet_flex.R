@@ -9,7 +9,7 @@
 #' @param M Matrix (n x 2) of interval endpoints.
 #' @param Z Model matrix (2n x d).
 #' @param theta Starting values for parameter vector (d x 1).
-#' @param lam Vector (d x 1) of penalty parameters.
+#' @param lam Scalar penalty parameter.
 #' @param alpha Scalar weight for elastic net (1 = lasso, 0 = ridge).
 #' @param pen_factor Vector (d x 1) of coefficient-specific penalty weights.
 #' @param box_constr matrix (d x 2) of box constraints. Can be -Inf (first col.)
@@ -25,8 +25,6 @@
 #'   printed during fitting.
 #' @param acc Logical indicating whether to use acceleration if
 #'   method = "fista".
-#' @param nfold Number of folds in k-fold cross-validation; 1 corresponds
-#'   to no cross-validation.
 #' @return A matrix where each row correspond to a value of lam and the columns
 #' are coefficient estimates (1 to d), the value of lam (d + 1), the number of
 #' iterations required (d + 2), and whether zero is in the sub-differential at
@@ -69,8 +67,7 @@ icnet_flex <- function(M,
                    method = "prox_newt",
                    distr = "norm",
                    verbose = FALSE, 
-                   acc = TRUE, 
-                   nfold = 1)
+                   acc = TRUE)
 {
   #############################################################################
   # Argument checking
@@ -83,21 +80,28 @@ icnet_flex <- function(M,
   stopifnot(is.numeric(theta), is.atomic(theta), length(theta) == d)
   stopifnot(is.numeric(alpha), is.atomic(alpha), length(alpha) == 1, alpha <= 1,
             alpha >= 0)
-  if(method == "fista"){
-    stopifnot(is.numeric(L), is.atomic(L), length(L) == 1, L > 0)    
-  }
 
-  stopifnot(is.numeric(maxit), is.atomic(maxit), all(maxit >= 0),
-            length(maxit) %in% c(1, 3))
-  stopifnot(is.numeric(tol), is.atomic(tol), all(tol > 0),
-            length(tol) == 2 | method == "fista")
   stopifnot(is.character(method), is.atomic(method), length(method) == 1, 
             method %in% c("fista", "prox_newt"))
   stopifnot(is.character(distr), is.atomic(distr), length(distr) == 1,
             distr %in% c("ee", "norm"))
   distr_num <- c(1, 2)[distr == c("ee", "norm")]
+  
+  if(method == "fista"){
+    stopifnot(is.numeric(L), is.atomic(L), length(L) == 1, L > 0)
+    stopifnot(is.numeric(maxit), is.atomic(maxit), all(maxit >= 0),
+              length(maxit) >= 1)
+    stopifnot(is.numeric(tol), is.atomic(tol), all(tol > 0),
+              length(tol) >= 1)
+    stopifnot(is.logical(acc), is.atomic(acc), length(acc) == 1)
+  } else{
+    stopifnot(is.numeric(maxit), is.atomic(maxit), all(maxit >= 0),
+              length(maxit) == 3)
+    stopifnot(is.numeric(tol), is.atomic(tol), all(tol > 0),
+              length(tol) == 2)
+  }
+  
   stopifnot(is.logical(verbose), is.atomic(verbose), length(verbose) == 1)
-  stopifnot(is.logical(acc), is.atomic(acc), length(acc) == 1)
 
   # No constraints by default
   if(is.null(box_constr)){
@@ -114,64 +118,73 @@ icnet_flex <- function(M,
 
   nlam <- length(lam)
   lam <- sort(lam, decreasing  = TRUE)
-    for(ii in 1:nlam){
-      #########################################################################
-      # Fit model
-      #########################################################################
-      if(method == "fista"){
-        fit <- fista(Z = Z,
-                     M = M,
-                     lam1 = alpha * lam[ii] * pen_factor,
-                     lam2 = (1 - alpha) * lam[ii] * pen_factor,
-                     theta = theta,
-                     constr = box_constr,
-                     maxit = maxit[1],
-                     tol = tol[1],
-                     L = L,
-                     verbose = verbose,
-                     acc = acc,
-                     dist = distr_num)
-      } else{
-        fit <- prox_newt(Z = Z,
-                         M = M,
-                         lam1 = alpha * lam[ii] * pen_factor,
-                         lam2 = (1 - alpha) * lam[ii] * pen_factor,
-                         theta = theta,
-                         constr = box_constr,
-                         maxit = maxit,
-                         tol = tol,
-                         verbose = verbose,
-                         dist = distr_num)
-      }
-      # Current estimate is used as starting value for next lambda
-      theta <- fit[["theta"]]
-      out[ii, 1:d] <- theta
-      out[ii, d + 1] <- lam[ii]
-      out[ii, d + 2] <- fit[["iter"]]
+  out <- matrix(NA, nrow = nlam, ncol = d + 5)
+  colnames(out) <- c(paste0("theta", 1:d), "lam", "iter", "conv", "obj", "loglik")
+  for(ii in 1:nlam){
+    #########################################################################
+    # Fit model
+    #########################################################################
+    if(method == "fista"){
+      fit <- fista(Z = Z,
+                   M = M,
+                   lam1 = alpha * lam[ii] * pen_factor,
+                   lam2 = (1 - alpha) * lam[ii] * pen_factor,
+                   theta = theta,
+                   constr = box_constr,
+                   maxit = maxit[1],
+                   tol = tol[1],
+                   L = L,
+                   verbose = verbose,
+                   acc = acc,
+                   dist = distr_num)
+    } else{
+      fit <- prox_newt(Z = Z,
+                       M = M,
+                       lam1 = alpha * lam[ii] * pen_factor,
+                       lam2 = (1 - alpha) * lam[ii] * pen_factor,
+                       theta = theta,
+                       constr = box_constr,
+                       maxit = maxit,
+                       tol = tol,
+                       verbose = verbose,
+                       dist = distr_num)
+    }
+    # Current estimate is used as starting value for next lambda
+    theta <- fit[["theta"]]
+    out[ii, 1:d] <- theta
+    out[ii, d + 1] <- lam[ii]
+    out[ii, d + 2] <- fit[["iter"]]
 
-      # Check if zero in sub-differential
-      zero_idx <- theta == 0
-      derivs <- obj_diff_cpp(Z = Z,
-                             theta = theta,
-                             M = M,
-                             lam1 = alpha * lam[ii] * pen_factor,
-                             lam2 = (1 - alpha) * lam[ii] * pen_factor,
-                             order = 1,
-                             dist = distr_num)
-      is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
-      is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <=
-                               (alpha * lam[ii] * pen_factor[zero_idx]))
-      # Did algo terminate before maxit?
-      early <-  out[ii, d + 2] < maxit[1]
-      if(is_KKT & early){ # All is well
-        out[ii, d + 3] <- 0
-      } else if(is_KKT & !early){
-        out[ii, d + 3] <- 1 # Found min on sqrt() tolerance but reached maxit
-      } else if(!is_KKT & !early){ # Did not find min and reached maxit
-        out[ii, d + 3] <- 2
-      } else{ # Terminated early but did not find min
-        out[ii, d + 3] <- 3
-      }
-    } # End loop over lam
+    # Check if zero in sub-differential
+    zero_idx <- theta == 0
+    derivs <- obj_diff_cpp(Z = Z,
+                           theta = theta,
+                           M = M,
+                           lam1 = alpha * lam[ii] * pen_factor,
+                           lam2 = (1 - alpha) * lam[ii] * pen_factor,
+                           order = 1,
+                           dist = distr_num)
+    is_KKT <- all(abs(derivs[["sub_grad"]][!zero_idx]) < sqrt(tol[1]))
+    is_KKT <- is_KKT & all(abs(derivs[["sub_grad"]][zero_idx]) <=
+                             (alpha * lam[ii] * pen_factor[zero_idx]))
+    # Did algo terminate before maxit?
+    early <-  out[ii, d + 2] < maxit[1]
+    if(is_KKT & early){ # All is well
+      out[ii, d + 3] <- 0
+    } else if(is_KKT & !early){
+      out[ii, d + 3] <- 1 # Found min on sqrt() tolerance but reached maxit
+    } else if(!is_KKT & !early){ # Did not find min and reached maxit
+      out[ii, d + 3] <- 2
+    } else{ # Terminated early but did not find min
+      out[ii, d + 3] <- 3
+    }
+    
+    out[ii, d + 4] <- derivs$obj
+    out[ii, d + 5] <- derivs$obj -
+      sum(alpha * lam[ii] * pen_factor * abs(theta)) -
+      0.5 * sum(alpha * lam[ii] * pen_factor * theta^2)
+    out[ii, d + 5] <- out[ii, d + 5] * (-n)
+    
+  } # End loop over lam
   return(out)
 }
