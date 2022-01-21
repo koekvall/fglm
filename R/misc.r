@@ -314,8 +314,6 @@ hessian_icnet <- function(Y,
   } else if(param == "theta"){ # theta param w/o fix s
     out <- hess_theta
   } else if(fix_s){ # b parametrization, s fixed
-    
-    # See p.125 in Magnus and Neudecker for Hessian chain rule
 
     # Jacobian of theta as fun of sb
     J_theta_sb <- diag(1/s, length(b))
@@ -325,6 +323,7 @@ hessian_icnet <- function(Y,
     
   } else{ # sb parameterization
     d <- length(theta)
+    
     # Jacobian for theta as fun of sb
     J_theta_sb <- Matrix::sparseMatrix(i = 1, j = 1, x = -1/s^2, dims = c(d, d))
     Matrix::diag(J_theta_sb)[-1] <- 1 / s
@@ -338,6 +337,7 @@ hessian_icnet <- function(Y,
       H_theta_sb[(ii - 1) * d + 1, ii] <- -1/s^2
     }
     
+    # See p.125 in Magnus and Neudecker for Hessian chain rule
     out <- Matrix::crossprod(J_theta_sb, hess_theta) %*% J_theta_sb + 
       Matrix::kronecker(t(score_theta), Matrix::diag(d)) %*% H_theta_sb
   }
