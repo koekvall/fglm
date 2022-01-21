@@ -250,9 +250,9 @@ score_icnet <- function(Y,
     J_theta_sb <- Matrix::sparseMatrix(i = 1, j = 1, x = -1/s^2, dims = c(d, d))
     Matrix::diag(J_theta_sb)[-1] <- 1 / s
     J_theta_sb[-1, 1] <- -b/s^2
-    out <- as.vector(Matrix::crossprod(J_theta_sb, score_theta))
+    out <- Matrix::crossprod(J_theta_sb, score_theta)
   }
-  out
+  as.vector(out)
 }
 
 #' Evaluate the Hessian of log-likelihood
@@ -326,22 +326,21 @@ hessian_icnet <- function(Y,
   } else{ # sb parameterization
     d <- length(theta)
     # Jacobian for theta as fun of sb
-    J_theta_sb <- matrix(0, d, d)
-    diag(J_theta_sb)[-1] <- 1/s
-    J_theta_sb[1, 1] <-  -1/s^2
+    J_theta_sb <- Matrix::sparseMatrix(i = 1, j = 1, x = -1/s^2, dims = c(d, d))
+    Matrix::diag(J_theta_sb)[-1] <- 1 / s
     J_theta_sb[-1, 1] <- -b/s^2
     
     # Hessian for theta as fun of sb
-    H_theta_sb <- Matrix::sparseMatrix(i = 1, j = 1, 2 / s^3, dims = c(d^2, d))
+    H_theta_sb <- Matrix::sparseMatrix(i = 1, j = 1, x = 2 / s^3, dims = c(d^2, d))
     for(ii in 2:d){
-      H_theta_sb[(ii - 1) * d + 1, 1] <- b[ii - 1] / s^3
+      H_theta_sb[(ii - 1) * d + 1, 1] <- 2 * b[ii - 1] / s^3
       H_theta_sb[(ii - 1) * d + ii, 1] <- -1/s^2
       H_theta_sb[(ii - 1) * d + 1, ii] <- -1/s^2
     }
     
-    out <- J_theta_sb %*% hess_theta %*% J_theta_sb + 
+    out <- Matrix::crossprod(J_theta_sb, hess_theta) %*% J_theta_sb + 
       Matrix::kronecker(t(score_theta), Matrix::diag(d)) %*% H_theta_sb
   }
-  out
+  as.matrix(out)
 }
 
