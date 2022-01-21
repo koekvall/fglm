@@ -47,6 +47,8 @@ Evaluate objective function and its derivatives
 {
  When order = 0, the gradient and Hessian elements of the return list are set
  to all zeros, and similarly for the Hessian when order = 1.
+ 
+ The derivatives are with respect to theta = [1 / s, b' / s]'
 
  The sub-gradient returned is that obtained by taking the sub-gradient of the
  absolute value to equal zero at zero. When no element of b is zero, this is

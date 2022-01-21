@@ -122,6 +122,8 @@ generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5, sigma = 1){
 #' @details{
 #'  When order = 0, the gradient and Hessian elements of the return list are set
 #'  to all zeros, and similarly for the Hessian when order = 1.
+#'  
+#'  The derivatives are with respect to theta = [1 / s, b' / s]'
 #'
 #'  The sub-gradient returned is that obtained by taking the sub-gradient of the
 #'  absolute value to equal zero at zero. When no element of b is zero, this is
@@ -179,10 +181,167 @@ obj_fun_icnet <- function(Y,
               length(pen_factor) == d, all(pen_factor >= 0))
   
   obj_diff_cpp(Z = Z,
-               theta = c(s, b),
+               theta = theta,
                M = M,
                lam1 = lam * alpha * pen_factor,
                lam2 = lam * (1 - alpha) * pen_factor,
                order = order,
                dist = distr_num)
 }
+
+#' Evaluate the score function (gradient of log-likelihood)
+#'
+#' @param Y Matrix of intervals containing latent responses.
+#' @param X Model matrix.
+#' @param b Vector (p x 1) of regression coefficients.
+#' @param s Latent error standard deviation.
+#' @param theta Parameter vector equal to [1/s, b'/s].
+#' @param fix_s If TRUE, s is assumed known
+#' @param distr Distribution of latent responses; "ee" for exponential.
+#'   distribution with log-link or "norm" for normal distribution with identity
+#'   link.
+#' @return A vector of first order derivatives of the log-likelihood, with
+#' respect to theta or [s, b']' depending on which arguments are supplied
+#' @export
+score_icnet <- function(Y,
+                        X,
+                        b = NULL,
+                        s = NULL,
+                        theta = NULL,
+                        fix_s = TRUE,
+                        distr = "norm")
+{
+  if(is.null(theta) & any(is.null(c(s, b)))){
+    stop("Either theta or s and b must be supplied.")
+  }
+  
+  if(!is.null(theta) & any(!is.null(c(s, b)))){
+    warning("Ignoring supplied s and b since theta also supplied.")
+  }
+  
+  if(is.null(theta)){
+    theta <- c(1 / s, b / s)
+    param = "sb"
+  } else{
+    s <- 1 / theta[1]
+    b <- theta[-1] * s
+    param = "theta"
+  }
+
+  score_theta <- -nrow(Y) * obj_fun_icnet(Y = Y,
+                               X = X,
+                               lam = 0,
+                               alpha = 0,
+                               pen_factor = NULL,
+                               b = b,
+                               s = s,
+                               distr = distr, 
+                               order = 1)$sub_grad
+ 
+  if(param == "theta" & fix_s){ # theta parameterization w fix s
+    out <- score_theta[-1]
+  } else if(param == "theta"){ # theta param w/o fix s
+    out <- score_theta  
+  } else if(fix_s){ # b parametrization, s fixed
+    out <- score_theta[-1] / s
+  } else{ # sb parameterization
+    # Jacobian for theta as fun of sb
+    d <- length(theta)
+    J_theta_sb <- Matrix::sparseMatrix(i = 1, j = 1, x = -1/s^2, dims = c(d, d))
+    Matrix::diag(J_theta_sb)[-1] <- 1 / s
+    J_theta_sb[-1, 1] <- -b/s^2
+    out <- as.vector(Matrix::crossprod(J_theta_sb, score_theta))
+  }
+  out
+}
+
+#' Evaluate the Hessian of log-likelihood
+#'
+#' @param Y Matrix of intervals containing latent responses.
+#' @param X Model matrix.
+#' @param b Vector (p x 1) of regression coefficients.
+#' @param s Latent error standard deviation.
+#' @param theta Parameter vector equal to [1/s, b'/s].
+#' @param fix_s If TRUE, s is assumed known
+#' @param distr Distribution of latent responses; "ee" for exponential.
+#'   distribution with log-link or "norm" for normal distribution with identity
+#'   link.
+#' @return A matrix of second order derivatives of the log-likelihood, with
+#' respect to theta or [s, b']' depending on which arguments are supplied
+#' @export
+hessian_icnet <- function(Y,
+                        X,
+                        b = NULL,
+                        s = NULL,
+                        theta = NULL,
+                        fix_s = TRUE,
+                        distr = "norm")
+{
+
+  if(is.null(theta) & any(is.null(c(s, b)))){
+    stop("Either theta or s and b must be supplied.")
+  }
+  
+  if(!is.null(theta) & any(!is.null(c(s, b)))){
+    warning("Ignoring supplied s and b since theta also supplied.")
+  }
+  
+  if(is.null(theta)){
+    theta <- c(1 / s, b / s)
+    param <- "sb"
+  } else{
+    s <- 1 / theta[1]
+    b <- theta[-1] * s
+    param <- "theta"
+  }
+  
+  derivs_theta <- obj_fun_icnet(Y = Y,
+                                X = X,
+                                lam = 0,
+                                alpha = 0,
+                                pen_factor = NULL,
+                                b = b,
+                                s = s,
+                                distr = distr, 
+                                order = 2)
+  
+  score_theta <- -nrow(Y) * derivs_theta$sub_grad 
+  
+  hess_theta <- -nrow(Y) * derivs_theta$hessian
+  
+  if(param == "theta" & fix_s){ # theta parameterization w fix s
+    out <- hess_theta[-1, -1]
+  } else if(param == "theta"){ # theta param w/o fix s
+    out <- hess_theta
+  } else if(fix_s){ # b parametrization, s fixed
+    
+    # See p.125 in Magnus and Neudecker for Hessian chain rule
+
+    # Jacobian of theta as fun of sb
+    J_theta_sb <- diag(1/s, length(b))
+    
+    # Because Hessian of theta as fun of sb = 0
+    out <- J_theta_sb %*% hess_theta %*% J_theta_sb
+    
+  } else{ # sb parameterization
+    d <- length(theta)
+    # Jacobian for theta as fun of sb
+    J_theta_sb <- matrix(0, d, d)
+    diag(J_theta_sb)[-1] <- 1/s
+    J_theta_sb[1, 1] <-  -1/s^2
+    J_theta_sb[-1, 1] <- -b/s^2
+    
+    # Hessian for theta as fun of sb
+    H_theta_sb <- Matrix::sparseMatrix(i = 1, j = 1, 2 / s^3, dims = c(d^2, d))
+    for(ii in 2:d){
+      H_theta_sb[(ii - 1) * d + 1, 1] <- b[ii - 1] / s^3
+      H_theta_sb[(ii - 1) * d + ii, 1] <- -1/s^2
+      H_theta_sb[(ii - 1) * d + 1, ii] <- -1/s^2
+    }
+    
+    out <- J_theta_sb %*% hess_theta %*% J_theta_sb + 
+      Matrix::kronecker(t(score_theta), Matrix::diag(d)) %*% H_theta_sb
+  }
+  out
+}
+

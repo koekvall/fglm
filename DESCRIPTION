@@ -10,7 +10,7 @@ Description: Accelerated proximal gradient descent (~FISTA) and proximal Newton
   censored responses. Efficiently computes the solution path for a sequence of
   penalty parameters. Currently supports (censored) Exponential distribution
   with log-link and Normal distribution with identity link.
-Imports: Rcpp (>= 1.0.6)
+Imports: Rcpp (>= 1.0.6), Matrix
 LinkingTo: Rcpp, RcppArmadillo
 License: MIT + file LICENSE
 RoxygenNote: 7.1.2

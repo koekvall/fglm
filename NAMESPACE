@@ -2,9 +2,11 @@
 
 export(generate_ee)
 export(generate_norm)
+export(hessian_icnet)
 export(icnet)
 export(icnet_flex)
 export(obj_fun_icnet)
+export(score_icnet)
 importFrom(Rcpp,evalCpp)
 importFrom(Rcpp,sourceCpp)
 useDynLib(icnet, .registration = TRUE)

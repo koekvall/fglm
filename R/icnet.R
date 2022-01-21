@@ -1,8 +1,8 @@
-#'Elastic-net penalized regression for interval censored responses 
+#'Elastic-net penalized regression for interval censored responses
 #'
 #' @description{
 #'   Minimizes an elastic net-penalized negative log-likelihood for interval
-#'   censored responses using accelerated proximal gradient descent or 
+#'   censored responses using accelerated proximal gradient descent or
 #'   proximal Newton.
 #' }
 #'
@@ -20,7 +20,7 @@
 #' @param maxit Vector of maximum number of iterations. If method = "prox_newt",
 #'  maxit[1] for Newton, maxit[2] for linesearch, and maxit[3] for coordinate
 #'  descent within each Newton step.
-#' @param tol Vector of tolerances for terminating algorithm. If method = 
+#' @param tol Vector of tolerances for terminating algorithm. If method =
 #'   "prox_newt", tol[1] is for Newton and tol[2] for coordinate descent within
 #'   Newton.
 #' @param method Method to use; "fista" or "prox_newt" (proximal Newton).
@@ -41,17 +41,17 @@
 #' iterations required (d + 2), and whether zero is in the sub-differential at
 #' the final iterate (d + 3)
 #' @details{
-#'   
+#'
 #'  The likelihood for the ith observation is, for a log-concave cdf R,
-#'   
+#'
 #'     log(R(bi) - R(ai))
-#'     
-#'  where ai = (Y[ii, 1] - t(X[ii, ]) %*% b) / s and 
+#'
+#'  where ai = (Y[ii, 1] - t(X[ii, ]) %*% b) / s and
 #'  bi = (Y[ii, 2] - t(X[ii, ]) %*% b) / s. This is the log-probability of the
 #'  event Y[ii, 1] < t(X[ii, ]) %*% b + s W[ii] < Y[ii, 2] when the elements
 #'  of W are independent with cdf R.
 #'
-#'  
+#'
 #'  If method = "fista", then only the first elements of maxit and tol are
 #'  used. If method = "prox_newt", then the first element of maxit is the
 #'  maximum number of Newton iterations, the second is the maximum number of
@@ -77,13 +77,13 @@ icnet <- function(Y,
                   box_constr = NULL,
                   L = 10,
                   maxit = rep(1e2, 3),
-                  tol = rep(1e-8, 2), 
+                  tol = rep(1e-8, 2),
                   method = "prox_newt",
                   distr = "norm",
-                  verbose = FALSE, 
-                  acc = TRUE, 
+                  verbose = FALSE,
+                  acc = TRUE,
                   nfold = 1){
-  
+
   #############################################################################
   # Argument checking
   #############################################################################
@@ -93,12 +93,12 @@ icnet <- function(Y,
   stopifnot(is.numeric(alpha), is.atomic(alpha), length(alpha) == 1, alpha <= 1,
             alpha >= 0)
 
-  stopifnot(is.character(method), is.atomic(method), length(method) == 1, 
+  stopifnot(is.character(method), is.atomic(method), length(method) == 1,
             method %in% c("fista", "prox_newt"))
   stopifnot(is.character(distr), is.atomic(distr), length(distr) == 1,
             distr %in% c("ee", "norm"))
   distr_num <- c(1, 2)[distr == c("ee", "norm")]
-  
+
   if(method == "fista"){
     stopifnot(is.numeric(L), is.atomic(L), length(L) == 1, L > 0)
     stopifnot(is.numeric(maxit), is.atomic(maxit), all(maxit >= 0),
@@ -112,14 +112,14 @@ icnet <- function(Y,
     stopifnot(is.numeric(tol), is.atomic(tol), all(tol > 0),
               length(tol) == 2)
   }
-  
+
   stopifnot(is.logical(verbose), is.atomic(verbose), length(verbose) == 1)
   stopifnot(is.logical(fix_var), is.atomic(fix_var), length(fix_var) == 1)
 
   n <- nrow(Y)
   stopifnot(nrow(X) == n)
   p <- ncol(X)
-  
+
   # Set all starting values for coefficients to zero by default
   if(is.null(b)){
       b <- rep(0, p)
@@ -132,7 +132,7 @@ icnet <- function(Y,
   } else{
     stopifnot(is.numeric(s), is.atomic(s), length(s) == 1, s > 0)
   }
-  
+
   # Number of parameters to estimate d depends on whether latent error stdev
   # is fixed.
   if(fix_var){
@@ -148,7 +148,7 @@ icnet <- function(Y,
       M[is.finite(M)] <- 0
       theta <- c(1 / s, b / s)
   }
-  
+
   # No constraints by default
   if(is.null(box_constr)){
     box_constr <- matrix(rep(c(-Inf, Inf), each = d), ncol = 2)
@@ -156,13 +156,13 @@ icnet <- function(Y,
     stopifnot(is.matrix(box_constr), all(dim(box_constr) == c(d, 2)),
               all(box_constr[, 1] < box_constr[, 2]))
   }
-  
+
   # Constrain precision parameter to be positive
   if(!fix_var){
     box_constr[1, 1] <- sqrt(.Machine$double.eps)
     stopifnot(box_constr[1, 2] > box_constr[1, 1])
   }
-  
+
   # By default, coefficients are penalized but not latent precision
   if(is.null(pen_factor)){
     if(fix_var){
@@ -171,11 +171,11 @@ icnet <- function(Y,
       pen_factor <- c(0, rep(1, p)) # Do not penalize precision
     }
   } else{
-    stopifnot(is.numeric(pen_factor), is.atomic(pen_factor), 
+    stopifnot(is.numeric(pen_factor), is.atomic(pen_factor),
               length(pen_factor) == d, all(pen_factor >= 0))
   }
   #############################################################################
-  
+
   nlam <- length(lam)
   lam <- sort(lam, decreasing  = TRUE)
   if(nfold > 1){
@@ -189,9 +189,13 @@ icnet <- function(Y,
     cv_mat <- matrix(NA, nrow = nlam, ncol = nfold)
     # Storage for saving average coefficient for largest lambda over all folds,
     # used as starting value when getting full fit
-    theta_large <- rep(0, d)
+    theta_large_sum <- rep(0, d)
   }
-  
+
+
+  #########################################################################
+  # Start loop over folds
+  #########################################################################
   for (jj in 1:nfold){
     if(nfold > 1){
       # Index for data not held out
@@ -243,8 +247,8 @@ icnet <- function(Y,
         b <- theta[2:d] * s
       }
       #########################################################################
-      
-      
+
+
       #########################################################################
       # If not cross-validating, save output and move to next lam
       #########################################################################
@@ -273,7 +277,7 @@ icnet <- function(Y,
                                  (alpha * lam[ii] * pen_factor[zero_idx]))
         # Did algo terminate before maxit?
         early <-  out[ii, p + 3] < maxit[1]
-        
+
         if(is_KKT & early){ # All is well
           out[ii, p + 4] <- 0
         } else if(is_KKT & !early){
@@ -283,42 +287,41 @@ icnet <- function(Y,
         } else{ # Terminated early but did not find min
           out[ii, p + 4] <- 3
         }
-        
+
         out[ii, p + 6] <- derivs$obj
         out[ii, p + 7] <- derivs$obj -
                           sum(alpha * lam[ii] * pen_factor * abs(theta)) -
                           0.5 * sum(alpha * lam[ii] * pen_factor * theta^2)
         out[ii, p + 7] <- out[ii, p + 7] * (-n)
-        
+
       } # End if nfold == 1
       #########################################################################
-      
-      
+
+
       #########################################################################
       # If cross-validating, store get CV error and move to next fold
       #########################################################################
       else{
+        pred <- X[-fit_idx, , drop = F] %*% b
         if(distr == "ee"){
-          pred <- exp(X[-fit_idx, , drop = F] %*% b)
-        } else if(distr == "norm"){
-          pred <- X[-fit_idx, , drop = F] %*% b
+          pred <- exp(pred)
         }
         # Store mis-classification rate (pred of latent var. outside interval)
         cv_mat[ii, jj] <- mean((pred < Y[-fit_idx, 1]) | pred >= Y[-fit_idx, 2])
         # If at largest lambda, store sum of theta to use average as starting value
         if(ii == 1){
-          theta_large <- theta_large + theta
+          theta_large_sum <- theta_large_sum + theta
         }
         # If at last value value of lambda, use average of b for largest lam
         # as starting value in next fold
         if(ii == nlam){
-          theta <- theta_large / jj
+          theta <- theta_large_sum / jj
         }
-      } # End if nfolds > 1 
+      } # End if nfolds > 1
       #########################################################################
     } # End loop over lam
   } # End loop over folds
-  
+
   #############################################################################
   # If cross-validating, prepare output and get best fit for full data
   #############################################################################

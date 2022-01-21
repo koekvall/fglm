@@ -51,7 +51,7 @@ or Inf (second col.).}
 maxit[1] for Newton, maxit[2] for linesearch, and maxit[3] for coordinate
 descent within each Newton step.}
 
-\item{tol}{Vector of tolerances for terminating algorithm. If method = 
+\item{tol}{Vector of tolerances for terminating algorithm. If method =
 "prox_newt", tol[1] is for Newton and tol[2] for coordinate descent within
 Newton.}
 
@@ -79,23 +79,23 @@ the final iterate (d + 3)
 \description{
 {
   Minimizes an elastic net-penalized negative log-likelihood for interval
-  censored responses using accelerated proximal gradient descent or 
+  censored responses using accelerated proximal gradient descent or
   proximal Newton.
 }
 }
 \details{
 {
-  
+
  The likelihood for the ith observation is, for a log-concave cdf R,
-  
+
     log(R(bi) - R(ai))
-    
- where ai = (Y[ii, 1] - t(X[ii, ]) %*% b) / s and 
+
+ where ai = (Y[ii, 1] - t(X[ii, ]) %*% b) / s and
  bi = (Y[ii, 2] - t(X[ii, ]) %*% b) / s. This is the log-probability of the
  event Y[ii, 1] < t(X[ii, ]) %*% b + s W[ii] < Y[ii, 2] when the elements
  of W are independent with cdf R.
 
- 
+
  If method = "fista", then only the first elements of maxit and tol are
  used. If method = "prox_newt", then the first element of maxit is the
  maximum number of Newton iterations, the second is the maximum number of
