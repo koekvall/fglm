@@ -44,11 +44,11 @@
 #'
 #'  The likelihood for the ith observation is, for a log-concave cdf R,
 #'
-#'     log(R(bi) - R(ai))
+#'     R(bi) - R(ai)
 #'
-#'  where ai = (Y[ii, 1] - t(X[ii, ]) %*% b) / s and
-#'  bi = (Y[ii, 2] - t(X[ii, ]) %*% b) / s. This is the log-probability of the
-#'  event Y[ii, 1] < t(X[ii, ]) %*% b + s W[ii] < Y[ii, 2] when the elements
+#'  where ai = (Y[ii, 1] - t(X[ii, ]) \%*\% b) / s and
+#'  bi = (Y[ii, 2] - t(X[ii, ]) \%*\% b) / s. This is the probability of the
+#'  event Y[ii, 1] < t(X[ii, ]) \%*\% b + s W[ii] < Y[ii, 2] when the elements
 #'  of W are independent with cdf R.
 #'
 #'
@@ -182,7 +182,7 @@ icnet <- function(Y,
     # Create folds
     IDX <- matrix(NA, nrow = 2, ncol = nfold)
     permute_idx <- sample(1:n, n, replace = FALSE)
-    IDX[1, ] <- seq(1, n - floor(n / nfold) + 1, by = floor(n / nfold))
+    IDX[1, ] <- seq(1, length.out = nfold, by = floor(n / nfold))
     IDX[2, 1:(nfold - 1)] <- IDX[1, 2:nfold] - 1
     IDX[2, nfold] <- n
     # Storage for errors

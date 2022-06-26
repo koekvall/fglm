@@ -88,11 +88,11 @@ the final iterate (d + 3)
 
  The likelihood for the ith observation is, for a log-concave cdf R,
 
-    log(R(bi) - R(ai))
+    R(bi) - R(ai)
 
- where ai = (Y[ii, 1] - t(X[ii, ]) %*% b) / s and
- bi = (Y[ii, 2] - t(X[ii, ]) %*% b) / s. This is the log-probability of the
- event Y[ii, 1] < t(X[ii, ]) %*% b + s W[ii] < Y[ii, 2] when the elements
+ where ai = (Y[ii, 1] - t(X[ii, ]) \%*\% b) / s and
+ bi = (Y[ii, 2] - t(X[ii, ]) \%*\% b) / s. This is the probability of the
+ event Y[ii, 1] < t(X[ii, ]) \%*\% b + s W[ii] < Y[ii, 2] when the elements
  of W are independent with cdf R.
 
 

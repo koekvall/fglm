@@ -11,8 +11,7 @@ hessian_icnet(
   s = NULL,
   theta = NULL,
   fix_s = TRUE,
-  distr = "norm",
-  param = "sb"
+  distr = "norm"
 )
 }
 \arguments{
