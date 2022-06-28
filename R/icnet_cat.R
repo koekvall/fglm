@@ -139,7 +139,7 @@ icnet_cat <- function(Y,
   # Argument checking
   #############################################################################
   stopifnot((is.matrix(X) & is.numeric(X)) | is.null(X))
-  stopifnot(class(Y) == "factor")
+  stopifnot("factor" %in% class(Y))
   if(0 %in% table(Y)){
     warning("Dropping empty levels of response")
     Y <- droplevels(Y)

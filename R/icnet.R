@@ -41,19 +41,10 @@
 #' \item{sigma}{Vector of estimates of \eqn{\sigma}, one element for
 #' each element of \code{lam}.}
 #'
-<<<<<<< Updated upstream
-#'     log(R(bi) - R(ai))
-#'
-#'  where ai = (Y[ii, 1] - t(X[ii, ]) %*% b) / s and
-#'  bi = (Y[ii, 2] - t(X[ii, ]) %*% b) / s. This is the log-probability of the
-#'  event Y[ii, 1] < t(X[ii, ]) %*% b + s W[ii] < Y[ii, 2] when the elements
-#'  of W are independent with cdf R.
-=======
 #' \item{beta}{Matrix of estimates of coefficients \eqn{\beta}, one column for
 #' each element of \code{lam}.}
 #'
 #' \item{theta}{Matrix of estimates of \eqn{\theta = [1/ \sigma, \beta'/\sigma]'}.}
->>>>>>> Stashed changes
 #'
 #' \item{lam}{Vector of penalty parameters.}
 #'
