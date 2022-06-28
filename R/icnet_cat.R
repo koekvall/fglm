@@ -1,24 +1,23 @@
-#' Elastic-net penalized regression for interval censored regression
+#' lastic-net penalized regression for categorical responses
 #'
 #' @description{ Minimizes an elastic net-penalized negative log-likelihood for
-#' interval censored regression using accelerated proximal gradient descent or
-#' proximal Newton.}
+#' categorical responses using accelerated proximal gradient descent or proximal
+#' Newton. }
 #'
-#' @param Y Matrix (\eqn{n \times 2}) of observed intervals.
-#' @param X Model matrix (\eqn{n\times p}).
+#' @param Y Vector with a categorical (factor) response with \eqn{m \geq 2}
+#'   levels.
+#' @param X Model matrix (\eqn{n\times p}, do not include intercept!)
 #' @param lam Vector of penalty parameters \eqn{\lambda}.
 #' @param alpha Scalar weight \eqn{\alpha} for elastic net (1 = lasso, 0 =
 #'   ridge).
 #' @param pen_factor Vector (\eqn{d \times 1}) of coefficient-specific penalty
-#'   weights. The first is for latent precision (\eqn{1 / \sigma}) and defaults
-#'   to zero. The remaining are for \eqn{\beta/\sigma} and default to one.
+#'   weights. The first \eqn{m - 1} elements are for \eqn{\gamma} and default to
+#'   zero. The remaining \eqn{p} elements are for \eqn{\beta} and default to
+#'   one.
 #' @param b Vector of initial values for regression coefficients \eqn{\beta}.
-#' @param s Scalar initial iterate for latent standard deviation \eqn{\sigma}.
-#' @param fix_var Logical indicating whether to assume \eqn{\sigma = s} is fixed
-#'   and known.
-#' @param box_constr Matrix (\eqn{d \times 2}) of box constraints. Can be \code{-Inf}
-#'   (first col.) or \code{Inf} (second col.). First row is for \eqn{\sigma} and
-#'   defaults to \eqn{[0, \infty]}.
+#' @param gam Vector of initial iterates for cut-off points \eqn{\gamma}.
+#' @param box_constr Matrix (\eqn{d \times 2}) of box constraints. Can be
+#'   \code{-Inf} (first col.) or \code{Inf} (second col.).
 #' @param maxit Vector of maximum number of iterations. If \code{method =
 #'   "prox_newt"}, \code{maxit[1]} for Newton, \code{maxit[2]} for linesearch,
 #'   and \code{maxit[3]} for coordinate descent within each Newton step.
@@ -37,92 +36,95 @@
 #' @param nfold Number of folds in \eqn{k}-fold cross-validation; 1 corresponds
 #'   to no cross-validation.
 #' @return If \code{nfold = 1}, a list with components
+#'  
+#'  \item{gam}{Matrix of estimates of cut-off points \eqn{\gamma}, one column
+#'  for each element of \code{lam}.}
 #'
-#' \item{sigma}{Vector of estimates of \eqn{\sigma}, one element for
-#' each element of \code{lam}.}
+#'  \item{beta}{Matrix of estimates of coefficients \eqn{\beta}, one column for
+#'  each element of \code{lam}.}
 #'
-#' \item{beta}{Matrix of estimates of coefficients \eqn{\beta}, one column for
-#' each element of \code{lam}.}
+#'  \item{theta}{Matrix of estimates of \eqn{\theta = [\gamma', \beta']'}.}
 #'
-#' \item{theta}{Matrix of estimates of \eqn{\theta = [1/ \sigma, \beta'/\sigma]'}.}
+#'  \item{lam}{Vector of penalty parameters.}
 #'
-#' \item{lam}{Vector of penalty parameters.}
+#'  \item{iter}{Vector of number of iterations performed for each element of
+#'  \code{lam}.}
+#'  
+#'  \item{conv}{Vector with convergence diagnostics for each element of
+#'  \code{lam}: 0 means convergence, 1 means minimum was found on square root
+#'  tolerance but \code{maxit[1]} reached, 2 means \code{maxit[1]} reached
+#'  without finding minimum, and 3 means \code{maxit[1]} was not reached nor was
+#'  a minimum found.}
+#'  
+#'  \item{err}{Vector with in-sample mis-classification rate for fitted values
+#'  for each element of \code{lam}.}
 #'
-#' \item{iter}{Vector of number of iterations performed for each element of
-#' \code{lam}.}
+#'  \item{obj}{Vector with reached objective value for each element of
+#'  \code{lam}.}
 #'
-#' \item{conv}{Vector with convergence diagnostics for each element of
-#' \code{lam}: 0 means convergence, 1 means minimum was found on square root
-#' tolerance but \code{maxit[1]} reached, 2 means \code{maxit[1]} reached
-#' without finding minimum, and 3 means \code{maxit[1]} was not reached nor was
-#' a minimum found.}
+#'  \item{loglik}{Vector with log-likelihood at final iterates for each element
+#'  of \code{lam}.}
 #'
-#' \item{err}{Vector with in-sample mis-classification rate for fitted values
-#' for each element of \code{lam}.}
+#'  If \code{nfold > 1}, a list with components
 #'
-#' \item{obj}{Vector with reached objective value for each element of
-#' \code{lam}.}
+#'  \item{gam_star}{Estimate of \eqn{\gamma} at the element of \code{lam}
+#'  selected by cross-validation.}
 #'
-#' \item{loglik}{Vector with log-likelihood at final iterates for each element
-#' of \code{lam}.}
+#'  \item{beta_star}{Estimate of \eqn{\beta} at the selected element of
+#'  \code{lam}.}
 #'
-#' If \code{nfold > 1}, a list with components
+#'  \item{theta_star}{Estimates of \eqn{\theta} at the selected element of
+#'  \code{lam}.}
 #'
-#' \item{sigma_star}{Estimate of \eqn{\sigma} for the element of \code{lam}
-#' selected by cross-validation.}
+#'  \item{lam_star}{The selected element of \code{lam}.}
 #'
-#' \item{beta_star}{Estimate of \eqn{\beta} at the selected element of
-#' \code{lam}.}
+#'  \item{full_fit}{A list of the type returned when \code{nfold = 1}, with an
+#'  added component \code{cv_err} which holds the cross validation
+#'  mis-classification rate for each element of \code{lam}.}
+#'  
 #' 
-#' \item{theta_star}{Estimate of \eqn{\theta} at the selected element of
-#' \code{lam}.}
+#' @details
+#'  Denote the \eqn{m} levels of the response, in the order they appear when
+#'  running \code{levels(Y)}, by \eqn{1, \dots, m}. For example, \eqn{Y_i = 1}
+#'  means the \eqn{i}th response is equal to the first level.
 #'
-#' \item{lam_star}{The selected element of \code{lam}.}
+#'  The likelihood for the \eqn{i}th observation is, for a log-concave cdf
+#'  \eqn{R}, \deqn{R(b_i) - R(a_i),}
 #'
-#' \item{full_fit}{A list of the type returned when \code{nfold = 1}, with an
-#' added component \code{cv_err} which holds the cross validation
-#' mis-classification rate for each element of \code{lam}.}
+#'  where \eqn{a_i = -\infty} if \eqn{Y_i = 1} and \eqn{a_i = \sum_{j = 1}^{Y_i
+#'  - 1}\gamma_j - x_i'\beta} otherwise; and \eqn{b_i = \infty} if \eqn{Y_i = m}
+#'  and \eqn{b_i = \sum_{j = 1}^{Y_i}\gamma_j - x_i'\beta} otherwise.
 #'
-#'
-#' @details Denote the \eqn{i}th response (interval) by \eqn{Y_i = (Y_i^L, Y_i^U)}.
-#' The likelihood for the \eqn{i}th observation is, for a log-concave cdf
-#' \eqn{R}, \deqn{R(b_i) - R(a_i),}
-#'
-#' where \eqn{a_i = Y_i^L/\sigma  - x_i'\beta/\sigma} and \eqn{b_i =
-#' Y_i^U/\sigma - x_i'\beta/\sigma}. This likelihood can be obtained by
-#' interval-censoring of a latent \deqn{Y_i^* = x_i'\beta + \sigma W_i,} 
-#' where \eqn{W_i} has cdf \eqn{R}.
-#' 
-#' With the default \code{pen_factor}, the objective function minimized is
-#' \deqn{g(\theta; \lambda, \alpha) = -\frac{1}{n}\sum_{i = 1}^n \log\{R(b_i) -
-#' R(a_i)\} + \alpha \lambda \Vert \beta\Vert_1 + \frac{1}{2}(1 - \alpha)\lambda
-#' \Vert \beta\Vert^2,} where \eqn{\theta = [\gamma', \beta']'}. More generally,
-#' with \eqn{P} denoting \code{pen_factor} and \eqn{\circ} the elementwise
-#' product, \deqn{g(\theta; \lambda, \alpha, P) = -\frac{1}{n}\sum_{i = 1}^n
-#' \log\{R(b_i) - R(a_i)\} + \alpha \lambda \Vert P\circ \theta \Vert_1 +
-#' \frac{1}{2}(1 - \alpha)\lambda \Vert P\circ \theta\Vert^2.}
-#'
-#' If \code{method = "fista"}, then only the first elements of \code{maxit} and
-#' \code{tol} are used. If \code{method = "prox_newt"}, then the first element
-#' of \code{maxit} is the maximum number of Newton iterations, the second is the
-#' maximum number of line search iterations for each Newton update, and the
-#' third is the maximum number of coordinate descent iterations within each
-#' Newton update. The first element of \code{tol} is for terminating the Newton
-#' iterations and the second for terminating the coordinate descent updates
-#' within each Newton iteration.
+#'  With the default \code{pen_factor}, the objective function minimized is
+#'  \deqn{g(\theta; \lambda, \alpha) = -\frac{1}{n}\sum_{i = 1}^n \log\{R(b_i) -
+#'  R(a_i)\} + \alpha \lambda \Vert \beta\Vert_1 + \frac{1}{2}(1 -
+#'  \alpha)\lambda \Vert \beta\Vert^2,} where \eqn{\theta = [\gamma', \beta']'}.
+#'  More generally, with \eqn{P} denoting \code{pen_factor} and \eqn{\circ} the
+#'  elementwise product, \deqn{g(\theta; \lambda, \alpha, P) =
+#'  -\frac{1}{n}\sum_{i = 1}^n \log\{R(b_i) - R(a_i)\} + \alpha \lambda \Vert
+#'  P\circ \theta \Vert_1 + \frac{1}{2}(1 - \alpha)\lambda \Vert P\circ
+#'  \theta\Vert^2.}
+#'  
+#'  If \code{method = "fista"}, then only the first elements of \code{maxit} and
+#'  \code{tol} are used. If \code{method = "prox_newt"}, then the first element
+#'  of \code{maxit} is the maximum number of Newton iterations, the second is
+#'  the maximum number of line search iterations for each Newton update, and the
+#'  third is the maximum number of coordinate descent iterations within each
+#'  Newton update. The first element of \code{tol} is for terminating the Newton
+#'  iterations and the second for terminating the coordinate descent updates
+#'  within each Newton iteration.
 
 #' @useDynLib fsnet, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom Rcpp evalCpp
 #' @export
-fsnet <- function(Y,
-                  X,
+fsnet_cat <- function(Y,
+                  X = NULL,
                   lam = 1e-5,
                   alpha = 0,
                   pen_factor = NULL,
                   b = NULL,
-                  s = NULL,
-                  fix_var = TRUE,
+                  gam = NULL,
                   box_constr = NULL,
                   L = 10,
                   maxit = rep(1e2, 3),
@@ -136,8 +138,13 @@ fsnet <- function(Y,
   #############################################################################
   # Argument checking
   #############################################################################
-  stopifnot(is.matrix(X), is.numeric(X),
-            is.matrix(Y), is.numeric(Y), ncol(Y) == 2)
+  stopifnot((is.matrix(X) & is.numeric(X)) | is.null(X))
+  stopifnot("factor" %in% class(Y))
+  if(0 %in% table(Y)){
+    warning("Dropping empty levels of response")
+    Y <- droplevels(Y)
+  }
+  nlev <- nlevels(Y)
   stopifnot(is.numeric(lam), is.atomic(lam), all(lam >= 0))
   stopifnot(is.numeric(alpha), is.atomic(alpha), length(alpha) == 1, alpha <= 1,
             alpha >= 0)
@@ -146,6 +153,13 @@ fsnet <- function(Y,
             method %in% c("fista", "prox_newt"))
   stopifnot(is.character(distr), is.atomic(distr), length(distr) == 1,
             distr %in% c("ee", "norm"))
+  if(distr == "ee"){
+    quant <- function(x){log(-log(1 - x))}
+    cdf <- function(x){1 - exp(-exp(x))}
+  } else{
+    quant <- function(x){stats::qnorm(x)}
+    cdf <- function(x){stats::pnorm(x)}
+  }
   distr_num <- c(1, 2)[distr == c("ee", "norm")]
 
   if(method == "fista"){
@@ -163,68 +177,72 @@ fsnet <- function(Y,
   }
 
   stopifnot(is.logical(verbose), is.atomic(verbose), length(verbose) == 1)
-  stopifnot(is.logical(fix_var), is.atomic(fix_var), length(fix_var) == 1)
 
-  n <- nrow(Y)
-  stopifnot(nrow(X) == n)
-  p <- ncol(X)
+  n <- length(Y)
+  stopifnot(is.null(X) | (nrow(X) == n))
+  p <- ifelse(is.null(X), 0, ncol(X))
+  d <- p + nlev - 1
 
   # Set all starting values for coefficients to zero by default
-  if(is.null(b)){
+  if(is.null(b) & !is.null(X)){
       b <- rep(0, p)
-  } else{
+  } else if(!is.null(X)){
     stopifnot(is.numeric(b), is.atomic(b), length(b) == p)
-  }
-  # Set latent stdev to 1 by default
-  if(is.null(s)){
-      s <- 1
   } else{
-    stopifnot(is.numeric(s), is.atomic(s), length(s) == 1, s > 0)
+    b <- NULL
   }
-
-  # Number of parameters to estimate d depends on whether latent error stdev
-  # is fixed.
-  if(fix_var){
-      d <- p
-      Z <- kronecker(-X, c(1, 1))
-      theta <- b * (1 / s)
-      M <- Y * (1 / s)
+  # Default cut-off points to obtain MLE without predictors
+  if(is.null(gam)){
+    mles <- prop.table(table(Y))
+    gam <- rep(0, nlev - 1)
+    gam[1] <- quant(mles[1])
+    for (ii in seq_len(nlev - 2)){
+      gam[ii + 1] <-  quant(sum(mles[1:(ii + 1)])) - sum(gam[1:ii])
+    }
   } else{
-      d <- p + 1
-      Z <- cbind(as.vector(t(Y)), kronecker(-X, c(1, 1)))
-      Z[!is.finite(Z)] <- 0
-      M <- Y
-      M[is.finite(M)] <- 0
-      theta <- c(1 / s, b / s)
+    stopifnot(is.numeric(gam), is.atomic(gam), length(gam) == nlev - 1,
+              all(gam[-1] >= 0))
   }
-
-  # No constraints by default
+  
+  Z <- matrix(0, nrow = 2 * n, ncol = nlev - 1)
+  if(p > 0) Z <- cbind(Z, kronecker(X, -c(1, 1)))
+  M <- matrix(0, nrow = n, ncol = 2) # Offset matrix
+  for(ii in 1:n){
+    lev_ii <- which(Y[ii] == levels(Y))
+    if(lev_ii == 1){
+      M[ii, 1] <- -Inf
+      Z[2 * (ii - 1) + 2, 1] <- 1
+      if(p > 0) Z[2 * (ii - 1) + 1, ] <- 0 # Set predictors to zero
+    } else if(lev_ii == nlev){
+      M[ii, 2] <- Inf
+      Z[2 * (ii - 1) + 1, 1:(lev_ii - 1)] <- 1
+      if(p > 0) Z[2 * (ii - 1) + 2, ] <- 0 # Set predictors to zero
+    }else{
+      Z[2 * (ii - 1) + 1, 1:(lev_ii - 1)] <- 1
+      Z[2 * (ii - 1) + 2, 1:lev_ii] <- 1
+    }
+  }
+  theta <- c(gam, b)
+  # No constraints on predictors by default; positive gammas to ensure
+  # positive probabilities
   if(is.null(box_constr)){
     box_constr <- matrix(rep(c(-Inf, Inf), each = d), ncol = 2)
+    if(nlev > 2){
+      box_constr[2:(nlev - 1), 1] <- 0
+    }
   } else{
     stopifnot(is.matrix(box_constr), all(dim(box_constr) == c(d, 2)),
               all(box_constr[, 1] < box_constr[, 2]))
   }
 
-  # Constrain precision parameter to be positive
-  if(!fix_var){
-    box_constr[1, 1] <- sqrt(.Machine$double.eps)
-    stopifnot(box_constr[1, 2] > box_constr[1, 1])
-  }
-
-  # By default, coefficients are penalized but not latent precision
+  # By default, beta is penalized but not cut-off points
   if(is.null(pen_factor)){
-    if(fix_var){
-      pen_factor <- rep(1, p)
-    } else{
-      pen_factor <- c(0, rep(1, p)) # Do not penalize precision
-    }
+   pen_factor <- c(rep(0, nlev - 1), rep(1, p))
   } else{
     stopifnot(is.numeric(pen_factor), is.atomic(pen_factor),
               length(pen_factor) == d, all(pen_factor >= 0))
   }
   #############################################################################
-
   nlam <- length(lam)
   lam <- sort(lam, decreasing  = TRUE)
   if(nfold > 1){
@@ -255,9 +273,9 @@ fsnet <- function(Y,
       fit_idx <- 1:n
       fit_idx_Z <- c(rbind(2 * (fit_idx - 1) + 1, 2 * (fit_idx - 1) + 2))
       #out <- matrix(NA, nrow = nlam, ncol = p + 7)
-      out <- list("sigma" = rep(NA, nlam),
+      out <- list("gam" = matrix(NA, nrow = nlev - 1, ncol = nlam),
                   "beta" = matrix(NA, nrow = p, ncol = nlam),
-                  "theta" = matrix(NA, nrow = p + 1, ncol = nlam),
+                  "theta" = matrix(NA, nrow = d, ncol = nlam),
                   "lam" = rep(NA, nlam),
                   "iter" = rep(NA, nlam),
                   "conv" = rep(NA, nlam),
@@ -272,38 +290,34 @@ fsnet <- function(Y,
       # Fit model
       #########################################################################
       if(method == "fista"){
-          fit <- fista(Z = Z[fit_idx_Z, , drop = F],
-                       M = M[fit_idx, ],
-                       lam1 = alpha * lam[ii] * pen_factor,
-                       lam2 = (1 - alpha) * lam[ii] * pen_factor,
-                       theta = theta,
-                       constr = box_constr,
-                       maxit = maxit[1],
-                       tol = tol[1],
-                       L = L,
-                       verbose = verbose,
-                       acc = acc,
-                       dist = distr_num)
+        fit <- fista(Z = Z[fit_idx_Z, , drop = F],
+                     M = M[fit_idx, ],
+                     lam1 = alpha * lam[ii] * pen_factor,
+                     lam2 = (1 - alpha) * lam[ii] * pen_factor,
+                     theta = theta,
+                     constr = box_constr,
+                     maxit = maxit[1],
+                     tol = tol[1],
+                     L = L,
+                     verbose = verbose,
+                     acc = acc,
+                     dist = distr_num)
       } else{
-          fit <- prox_newt(Z = Z[fit_idx_Z, , drop = F],
-                           M = M[fit_idx, ],
-                           lam1 = alpha * lam[ii] * pen_factor,
-                           lam2 = (1 - alpha) * lam[ii] * pen_factor,
-                           theta = theta,
-                           constr = box_constr,
-                           maxit = maxit,
-                           tol = tol,
-                           verbose = verbose,
-                           dist = distr_num)
+        fit <- prox_newt(Z = Z[fit_idx_Z, , drop = F],
+                         M = M[fit_idx, ],
+                         lam1 = alpha * lam[ii] * pen_factor,
+                         lam2 = (1 - alpha) * lam[ii] * pen_factor,
+                         theta = theta,
+                         constr = box_constr,
+                         maxit = maxit,
+                         tol = tol,
+                         verbose = verbose,
+                         dist = distr_num)
       }
       # Current estimate is used as starting value for next lambda
       theta <- fit[["theta"]]
-      if(fix_var){
-        b <- theta * s
-      } else{
-        s <- 1 / theta[1]
-        b <- theta[2:d] * s
-      }
+      gam <- theta[1:(nlev - 1)]
+      if(p > 0) b <- theta[nlev:d]
       #########################################################################
 
 
@@ -314,20 +328,24 @@ fsnet <- function(Y,
         #out[ii, 1:(p + 1)] <- c(s, b)
         #out[ii, p + 2] <- lam[ii]
         #out[ii, p + 3] <- fit[["iter"]]
-        out$sigma[ii] <- s
-        out$beta[, ii] <- b
-        out$theta[, ii] <- c(1 / s, b / s)
+        out$gam[, ii] <- gam
+        if(p > 0) out$beta[, ii] <- b
+        out$theta[, ii] <- c(gam, b)
         out$lam[ii] <- lam[ii]
         out$iter[ii] <- fit[["iter"]]
-        if(distr == "ee"){
-          pred <- exp(X %*% b)
-        } else if(distr == "norm"){
+        
+        if(p > 0){
           pred <- X %*% b
+        } else{
+         pred <- rep(0, n) 
         }
+        gam_sum <- cumsum(gam)
+        class_probs <- sapply(pred, function(x){cdf(c(gam_sum, Inf) - x) - cdf(c(-Inf, gam_sum) - x)})
+        pred_class <- apply(class_probs, 2, which.max)
+        real_class <- sapply(Y, function(x){which(x == levels(Y))})
         # Proportion of incorrectly predicted intervals in-sample, or
         # mis-classification rate (mcr)
-        #out[ii, p + 5] <- mean((pred < Y[, 1]) | (pred >= Y[, 2]))
-        out$err[ii] <- mean((pred < Y[, 1]) | (pred >= Y[, 2]))
+        out$err[ii] <- mean(pred_class != real_class)
         # Check if zero in sub-differential
         zero_idx <- theta == 0
         derivs <- obj_diff_cpp(Z = Z,
@@ -374,12 +392,15 @@ fsnet <- function(Y,
       # If cross-validating, store get CV error and move to next fold
       #########################################################################
       else{
-        pred <- X[-fit_idx, , drop = F] %*% b
-        if(distr == "ee"){
-          pred <- exp(pred)
+        if(p > 0){
+          pred <- X[-fit_idx, , drop = F] %*% b
+        } else{
+          pred <- rep(0, n - length(fit_idx))
         }
+        pred_class <- sapply(pred, function(x){sum(x > cumsum(gam))}) + 1
+        real_class <- sapply(Y[-fit_idx], function(x){which(x == levels(Y))})
         # Store mis-classification rate (pred of latent var. outside interval)
-        cv_mat[ii, jj] <- mean((pred < Y[-fit_idx, 1]) | pred >= Y[-fit_idx, 2])
+        cv_mat[ii, jj] <- mean(pred_class != real_class)
         # If at largest lambda, store sum of theta to use average as starting value
         if(ii == 1){
           theta_large_sum <- theta_large_sum + theta
@@ -402,17 +423,18 @@ fsnet <- function(Y,
     cv_sd <- apply(cv_mat, 1, stats::sd) # Standard deviation of mcr for each lam
     best_idx <- which.min(cv_err)
     lam_star <- lam[best_idx]
-    full_fit <- fsnet(Y = Y, X = X, lam = lam, alpha = alpha,
-                      pen_factor = pen_factor, b = b, s = s, fix_var = fix_var,
+    full_fit <- fsnet_cat(Y = Y, X = X, lam = lam, alpha = alpha,
+                      pen_factor = pen_factor, b = b, gam = gam,
                       box_constr = box_constr, L = L, maxit = maxit, tol = tol,
                       method = method, distr = distr, verbose = verbose,
                       acc = acc, nfold = 1)
     full_fit$cv_err <- cv_err
     full_fit$cv_sd <- cv_sd
-    b <- full_fit$beta[, best_idx]
-    s <- full_fit$sigma[best_idx]
-    out <- list("sigma_star" = s, "b_star" =  b, "theta_star" = c(1 / s, b / s),
-                "lam_star" = lam_star, "full_fit" = full_fit)
+    if(p > 0) b <- full_fit$beta[, best_idx]
+    gam <- full_fit$gam[, best_idx]
+    theta <- c(gam, b)
+    out <- list("gam_star" = gam, "beta_star" =  ifelse(p > 0, b, matrix(0, 0, 1)),
+                "theta_star" = theta, "lam_star" = lam_star, "full_fit" = full_fit)
   }
-  return(out)
+  out
 }

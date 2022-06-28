@@ -2,62 +2,62 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 fista <- function(Z, M, lam1, lam2, theta, constr, maxit, tol, L, verbose, acc, dist) {
-    .Call(`_icnet_fista`, Z, M, lam1, lam2, theta, constr, maxit, tol, L, verbose, acc, dist)
+    .Call(`_fsnet_fista`, Z, M, lam1, lam2, theta, constr, maxit, tol, L, verbose, acc, dist)
 }
 
 loglik_ab <- function(a, b, order, dist) {
-    .Call(`_icnet_loglik_ab`, a, b, order, dist)
+    .Call(`_fsnet_loglik_ab`, a, b, order, dist)
 }
 
 loglik_grad <- function(Z, ab_grad) {
-    .Call(`_icnet_loglik_grad`, Z, ab_grad)
+    .Call(`_fsnet_loglik_grad`, Z, ab_grad)
 }
 
 obj_fun <- function(a, b, theta, lam1, lam2, dist) {
-    .Call(`_icnet_obj_fun`, a, b, theta, lam1, lam2, dist)
+    .Call(`_fsnet_obj_fun`, a, b, theta, lam1, lam2, dist)
 }
 
 obj_diff_cpp <- function(Z, theta, M, lam1, lam2, order, dist) {
-    .Call(`_icnet_obj_diff_cpp`, Z, theta, M, lam1, lam2, order, dist)
+    .Call(`_fsnet_obj_diff_cpp`, Z, theta, M, lam1, lam2, order, dist)
 }
 
 get_eta <- function(Z, theta) {
-    .Call(`_icnet_get_eta`, Z, theta)
+    .Call(`_fsnet_get_eta`, Z, theta)
 }
 
 get_ab <- function(Z, theta, M) {
-    .Call(`_icnet_get_ab`, Z, theta, M)
+    .Call(`_fsnet_get_ab`, Z, theta, M)
 }
 
 soft_t <- function(x, lam) {
-    .Call(`_icnet_soft_t`, x, lam)
+    .Call(`_fsnet_soft_t`, x, lam)
 }
 
 solve_constr_l1 <- function(a, b, c1, c2, lam) {
-    .Call(`_icnet_solve_constr_l1`, a, b, c1, c2, lam)
+    .Call(`_fsnet_solve_constr_l1`, a, b, c1, c2, lam)
 }
 
 log1mexp <- function(x) {
-    .Call(`_icnet_log1mexp`, x)
+    .Call(`_fsnet_log1mexp`, x)
 }
 
 start_profiler <- function(str) {
-    .Call(`_icnet_start_profiler`, str)
+    .Call(`_fsnet_start_profiler`, str)
 }
 
 stop_profiler <- function() {
-    .Call(`_icnet_stop_profiler`)
+    .Call(`_fsnet_stop_profiler`)
 }
 
 quad_appr_ll <- function(linpred, linpred_old, ab_diffs) {
-    .Call(`_icnet_quad_appr_ll`, linpred, linpred_old, ab_diffs)
+    .Call(`_fsnet_quad_appr_ll`, linpred, linpred_old, ab_diffs)
 }
 
 newton_step <- function(Z, ab, ab_diffs, lam1, lam2, theta, constr, maxit, tol, verbose, dist) {
-    .Call(`_icnet_newton_step`, Z, ab, ab_diffs, lam1, lam2, theta, constr, maxit, tol, verbose, dist)
+    .Call(`_fsnet_newton_step`, Z, ab, ab_diffs, lam1, lam2, theta, constr, maxit, tol, verbose, dist)
 }
 
 prox_newt <- function(Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist) {
-    .Call(`_icnet_prox_newt`, Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist)
+    .Call(`_fsnet_prox_newt`, Z, M, lam1, lam2, theta, constr, maxit, tol, verbose, dist)
 }
 

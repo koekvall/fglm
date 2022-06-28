@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // fista
 Rcpp::List fista(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, arma::vec theta, const arma::mat& constr, const int& maxit, const double& tol, const double& L, const bool& verbose, const bool& acc, const int& dist);
-RcppExport SEXP _icnet_fista(SEXP ZSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP, SEXP distSEXP) {
+RcppExport SEXP _fsnet_fista(SEXP ZSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP LSEXP, SEXP verboseSEXP, SEXP accSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -35,7 +35,7 @@ END_RCPP
 }
 // loglik_ab
 arma::mat loglik_ab(const arma::vec& a, const arma::vec& b, const int& order, const int& dist);
-RcppExport SEXP _icnet_loglik_ab(SEXP aSEXP, SEXP bSEXP, SEXP orderSEXP, SEXP distSEXP) {
+RcppExport SEXP _fsnet_loglik_ab(SEXP aSEXP, SEXP bSEXP, SEXP orderSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -49,7 +49,7 @@ END_RCPP
 }
 // loglik_grad
 arma::vec loglik_grad(const arma::mat& Z, const arma::mat& ab_grad);
-RcppExport SEXP _icnet_loglik_grad(SEXP ZSEXP, SEXP ab_gradSEXP) {
+RcppExport SEXP _fsnet_loglik_grad(SEXP ZSEXP, SEXP ab_gradSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,7 +61,7 @@ END_RCPP
 }
 // obj_fun
 double obj_fun(const arma::vec& a, const arma::vec& b, const arma::vec& theta, const arma::vec& lam1, const arma::vec& lam2, const int& dist);
-RcppExport SEXP _icnet_obj_fun(SEXP aSEXP, SEXP bSEXP, SEXP thetaSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP distSEXP) {
+RcppExport SEXP _fsnet_obj_fun(SEXP aSEXP, SEXP bSEXP, SEXP thetaSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -77,7 +77,7 @@ END_RCPP
 }
 // obj_diff_cpp
 Rcpp::List obj_diff_cpp(const arma::mat& Z, const arma::vec& theta, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, const int& order, const int& dist);
-RcppExport SEXP _icnet_obj_diff_cpp(SEXP ZSEXP, SEXP thetaSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP orderSEXP, SEXP distSEXP) {
+RcppExport SEXP _fsnet_obj_diff_cpp(SEXP ZSEXP, SEXP thetaSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP orderSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -94,7 +94,7 @@ END_RCPP
 }
 // get_eta
 arma::mat get_eta(const arma::mat& Z, const arma::vec& theta);
-RcppExport SEXP _icnet_get_eta(SEXP ZSEXP, SEXP thetaSEXP) {
+RcppExport SEXP _fsnet_get_eta(SEXP ZSEXP, SEXP thetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -106,7 +106,7 @@ END_RCPP
 }
 // get_ab
 arma::mat get_ab(const arma::mat& Z, const arma::vec& theta, arma::mat M);
-RcppExport SEXP _icnet_get_ab(SEXP ZSEXP, SEXP thetaSEXP, SEXP MSEXP) {
+RcppExport SEXP _fsnet_get_ab(SEXP ZSEXP, SEXP thetaSEXP, SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -119,7 +119,7 @@ END_RCPP
 }
 // soft_t
 arma::vec soft_t(arma::vec x, const arma::vec& lam);
-RcppExport SEXP _icnet_soft_t(SEXP xSEXP, SEXP lamSEXP) {
+RcppExport SEXP _fsnet_soft_t(SEXP xSEXP, SEXP lamSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -131,7 +131,7 @@ END_RCPP
 }
 // solve_constr_l1
 double solve_constr_l1(const double& a, const double& b, const double& c1, const double& c2, const double& lam);
-RcppExport SEXP _icnet_solve_constr_l1(SEXP aSEXP, SEXP bSEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP lamSEXP) {
+RcppExport SEXP _fsnet_solve_constr_l1(SEXP aSEXP, SEXP bSEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP lamSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -146,7 +146,7 @@ END_RCPP
 }
 // log1mexp
 arma::vec log1mexp(arma::vec x);
-RcppExport SEXP _icnet_log1mexp(SEXP xSEXP) {
+RcppExport SEXP _fsnet_log1mexp(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -157,7 +157,7 @@ END_RCPP
 }
 // start_profiler
 SEXP start_profiler(SEXP str);
-RcppExport SEXP _icnet_start_profiler(SEXP strSEXP) {
+RcppExport SEXP _fsnet_start_profiler(SEXP strSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -168,7 +168,7 @@ END_RCPP
 }
 // stop_profiler
 SEXP stop_profiler();
-RcppExport SEXP _icnet_stop_profiler() {
+RcppExport SEXP _fsnet_stop_profiler() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -178,7 +178,7 @@ END_RCPP
 }
 // quad_appr_ll
 double quad_appr_ll(arma::mat linpred, const arma::mat& linpred_old, const arma::mat& ab_diffs);
-RcppExport SEXP _icnet_quad_appr_ll(SEXP linpredSEXP, SEXP linpred_oldSEXP, SEXP ab_diffsSEXP) {
+RcppExport SEXP _fsnet_quad_appr_ll(SEXP linpredSEXP, SEXP linpred_oldSEXP, SEXP ab_diffsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -191,7 +191,7 @@ END_RCPP
 }
 // newton_step
 arma::vec newton_step(const arma::mat& Z, const arma::mat& ab, const arma::mat& ab_diffs, const arma::vec& lam1, const arma::vec& lam2, arma::vec theta, const arma::mat& constr, const int& maxit, const double& tol, const bool& verbose, const int& dist);
-RcppExport SEXP _icnet_newton_step(SEXP ZSEXP, SEXP abSEXP, SEXP ab_diffsSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP distSEXP) {
+RcppExport SEXP _fsnet_newton_step(SEXP ZSEXP, SEXP abSEXP, SEXP ab_diffsSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -212,7 +212,7 @@ END_RCPP
 }
 // prox_newt
 Rcpp::List prox_newt(const arma::mat& Z, const arma::mat& M, const arma::vec& lam1, const arma::vec& lam2, arma::vec theta, const arma::mat& constr, const arma::ivec& maxit, const arma::vec& tol, const bool& verbose, const int& dist);
-RcppExport SEXP _icnet_prox_newt(SEXP ZSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP distSEXP) {
+RcppExport SEXP _fsnet_prox_newt(SEXP ZSEXP, SEXP MSEXP, SEXP lam1SEXP, SEXP lam2SEXP, SEXP thetaSEXP, SEXP constrSEXP, SEXP maxitSEXP, SEXP tolSEXP, SEXP verboseSEXP, SEXP distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -232,25 +232,25 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_icnet_fista", (DL_FUNC) &_icnet_fista, 12},
-    {"_icnet_loglik_ab", (DL_FUNC) &_icnet_loglik_ab, 4},
-    {"_icnet_loglik_grad", (DL_FUNC) &_icnet_loglik_grad, 2},
-    {"_icnet_obj_fun", (DL_FUNC) &_icnet_obj_fun, 6},
-    {"_icnet_obj_diff_cpp", (DL_FUNC) &_icnet_obj_diff_cpp, 7},
-    {"_icnet_get_eta", (DL_FUNC) &_icnet_get_eta, 2},
-    {"_icnet_get_ab", (DL_FUNC) &_icnet_get_ab, 3},
-    {"_icnet_soft_t", (DL_FUNC) &_icnet_soft_t, 2},
-    {"_icnet_solve_constr_l1", (DL_FUNC) &_icnet_solve_constr_l1, 5},
-    {"_icnet_log1mexp", (DL_FUNC) &_icnet_log1mexp, 1},
-    {"_icnet_start_profiler", (DL_FUNC) &_icnet_start_profiler, 1},
-    {"_icnet_stop_profiler", (DL_FUNC) &_icnet_stop_profiler, 0},
-    {"_icnet_quad_appr_ll", (DL_FUNC) &_icnet_quad_appr_ll, 3},
-    {"_icnet_newton_step", (DL_FUNC) &_icnet_newton_step, 11},
-    {"_icnet_prox_newt", (DL_FUNC) &_icnet_prox_newt, 10},
+    {"_fsnet_fista", (DL_FUNC) &_fsnet_fista, 12},
+    {"_fsnet_loglik_ab", (DL_FUNC) &_fsnet_loglik_ab, 4},
+    {"_fsnet_loglik_grad", (DL_FUNC) &_fsnet_loglik_grad, 2},
+    {"_fsnet_obj_fun", (DL_FUNC) &_fsnet_obj_fun, 6},
+    {"_fsnet_obj_diff_cpp", (DL_FUNC) &_fsnet_obj_diff_cpp, 7},
+    {"_fsnet_get_eta", (DL_FUNC) &_fsnet_get_eta, 2},
+    {"_fsnet_get_ab", (DL_FUNC) &_fsnet_get_ab, 3},
+    {"_fsnet_soft_t", (DL_FUNC) &_fsnet_soft_t, 2},
+    {"_fsnet_solve_constr_l1", (DL_FUNC) &_fsnet_solve_constr_l1, 5},
+    {"_fsnet_log1mexp", (DL_FUNC) &_fsnet_log1mexp, 1},
+    {"_fsnet_start_profiler", (DL_FUNC) &_fsnet_start_profiler, 1},
+    {"_fsnet_stop_profiler", (DL_FUNC) &_fsnet_stop_profiler, 0},
+    {"_fsnet_quad_appr_ll", (DL_FUNC) &_fsnet_quad_appr_ll, 3},
+    {"_fsnet_newton_step", (DL_FUNC) &_fsnet_newton_step, 11},
+    {"_fsnet_prox_newt", (DL_FUNC) &_fsnet_prox_newt, 10},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_icnet(DllInfo *dll) {
+RcppExport void R_init_fsnet(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

@@ -133,7 +133,7 @@ generate_norm <- function(X, b, d = 1, ymax = 5, ymin = -5, sigma = 1){
 #'  objective function
 #' }
 #' @export
-obj_fun_icnet <- function(Y,
+obj_fun_fsnet <- function(Y,
                           X,
                           lam = 1e-5,
                           alpha = 0,
@@ -203,7 +203,7 @@ obj_fun_icnet <- function(Y,
 #' @return A vector of first order derivatives of the log-likelihood, with
 #' respect to theta or [s, b']' depending on which arguments are supplied
 #' @export
-score_icnet <- function(Y,
+score_fsnet <- function(Y,
                         X,
                         b = NULL,
                         s = NULL,
@@ -228,7 +228,7 @@ score_icnet <- function(Y,
     param = "theta"
   }
 
-  score_theta <- -nrow(Y) * obj_fun_icnet(Y = Y,
+  score_theta <- -nrow(Y) * obj_fun_fsnet(Y = Y,
                                X = X,
                                lam = 0,
                                alpha = 0,
@@ -269,7 +269,7 @@ score_icnet <- function(Y,
 #' @return A matrix of second order derivatives of the log-likelihood, with
 #' respect to theta or [s, b']' depending on which arguments are supplied
 #' @export
-hessian_icnet <- function(Y,
+hessian_fsnet <- function(Y,
                         X,
                         b = NULL,
                         s = NULL,
@@ -295,7 +295,7 @@ hessian_icnet <- function(Y,
     param <- "theta"
   }
   
-  derivs_theta <- obj_fun_icnet(Y = Y,
+  derivs_theta <- obj_fun_fsnet(Y = Y,
                                 X = X,
                                 lam = 0,
                                 alpha = 0,
