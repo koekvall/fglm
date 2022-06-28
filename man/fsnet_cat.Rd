@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsnet_cat.R
 \name{fsnet_cat}
 \alias{fsnet_cat}
-\title{lastic-net penalized regression for categorical responses}
+\title{Elastic-net penalized regression for categorical responses}
 \usage{
 fsnet_cat(
   Y,

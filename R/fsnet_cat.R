@@ -1,4 +1,4 @@
-#' lastic-net penalized regression for categorical responses
+#' Elastic-net penalized regression for categorical responses
 #'
 #' @description{ Minimizes an elastic net-penalized negative log-likelihood for
 #' categorical responses using accelerated proximal gradient descent or proximal
