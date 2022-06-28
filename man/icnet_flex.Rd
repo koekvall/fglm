@@ -2,7 +2,7 @@
 % Please edit documentation in R/icnet_flex.R
 \name{icnet_flex}
 \alias{icnet_flex}
-\title{Elastic-net regression for flexible interval censored latent variables}
+\title{Elastic-net penalized flexible finite-support regression}
 \usage{
 icnet_flex(
   M,
@@ -22,70 +22,101 @@ icnet_flex(
 )
 }
 \arguments{
-\item{M}{Matrix (n x 2) of interval endpoints.}
+\item{M}{Matrix (\eqn{n \times 2}) of offsets.}
 
-\item{Z}{Model matrix (2n x d).}
+\item{Z}{Model matrix (\eqn{2n\times d}).}
 
-\item{theta}{Starting values for parameter vector (d x 1).}
+\item{theta}{Vector (\eqn{d\times 1}) of initial iterates for parameter \eqn{\theta}.}
 
-\item{lam}{Scalar penalty parameter.}
+\item{lam}{Vector of penalty parameters \eqn{\lambda}.}
 
-\item{alpha}{Scalar weight for elastic net (1 = lasso, 0 = ridge).}
+\item{alpha}{Scalar weight \eqn{\alpha} for elastic net (1 = lasso, 0 =
+ridge).}
 
-\item{pen_factor}{Vector (d x 1) of coefficient-specific penalty weights.}
+\item{pen_factor}{Vector (\eqn{d \times 1}) of coefficient-specific penalty
+weights.}
 
-\item{box_constr}{matrix (d x 2) of box constraints. Can be -Inf (first col.)
-or Inf (second col.).}
+\item{box_constr}{Matrix (\eqn{d \times 2}) of box constraints. Can be \code{-Inf}
+(first col.) or \code{Inf} (second col.).}
 
-\item{L}{Scalar setting step-size 1 / L if method = "fista".}
+\item{L}{Scalar setting step-size 1 / L if \code{method = "fista"}.}
 
-\item{maxit}{Vector of maximum number of iterations.}
+\item{maxit}{Vector of maximum number of iterations. If \code{method =
+"prox_newt"}, \code{maxit[1]} for Newton, \code{maxit[2]} for linesearch,
+and \code{maxit[3]} for coordinate descent within each Newton step.}
 
-\item{tol}{Vector of tolerances for terminating algorithm.}
+\item{tol}{Vector of tolerances for terminating algorithm. If \code{method =
+"prox_newt"}, \code{tol[1]} is for Newton and \code{tol[2]} for coordinate
+descent within Newton.}
 
-\item{method}{Method to use; "fista" or "prox_newt" (proximal Newton).}
+\item{method}{Method to use; \code{"fista"} or \code{"prox_newt"} (proximal
+Newton).}
 
-\item{distr}{Distribution of latent responses; "ee" for exponential.
-distribution with log-link or "norm" for normal distribution with identity
-link.}
+\item{distr}{Distribution function \eqn{R} (see details); \code{"ee"} for
+extreme-value or \code{"norm"} for normal.}
 
 \item{verbose}{Logical indicating whether additional information should be
 printed during fitting.}
 
-\item{acc}{Logical indicating whether to use acceleration if
-method = "fista".}
+\item{acc}{Logical indicating whether to use acceleration if \code{method =
+"fista"}.}
 }
 \value{
-A matrix where each row correspond to a value of lam and the columns
-are coefficient estimates (1 to d), the value of lam (d + 1), the number of
-iterations required (d + 2), and whether zero is in the sub-differential at
-the final iterate (d + 3)
+A list with components
+
+\item{theta}{Matrix of estimates of \eqn{\theta}.}
+
+\item{lam}{Vector of penalty parameters.}
+
+\item{iter}{Vector of number of iterations performed for each element of
+\code{lam}.}
+
+\item{conv}{Vector with convergence diagnostics for each element of
+\code{lam}: 0 means convergence, 1 means minimum was found on square root
+tolerance but \code{maxit[1]} reached, 2 means \code{maxit[1]} reached
+without finding minimum, and 3 means \code{maxit[1]} was not reached nor was
+a minimum found.}
+
+\item{obj}{Vector with reached objective value for each element of
+\code{lam}.}
+
+\item{loglik}{Vector with log-likelihood at final iterates for each element
+of \code{lam}.}
 }
 \description{
-{
-  Minimizes an elastic net-penalized negative log-likelihood for interval
-  censored latent variables using accelerated proximal gradient descent or 
-  proximal Newton.
-}
+{ Minimizes an elastic net-penalized negative log-likelihood for
+finite-support response regression using accelerated proximal gradient
+descent or proximal Newton.}
 }
 \details{
-{
- Fit a model more general than icnet, but with fewer options, in particular,
- there is no cross-validation option.
- 
- The likelihood for the ith observation is, for a log-concave cdf R,
-  
-    log(R(bi) - R(ai))
-    
- where ai = M[ii, 1] + Z[ii, ] %*% theta and bi = M[ii, 2] + Z[ii + 1, ] %*%
- theta.
- 
- If method = "fista", then only the first elements of maxit and tol are
- used. If method = "prox_newt", then the first element of maxit is the
- maximum number of Newton iterations, the second is the maximum number of
- line search iterations for each Newton update, and the third is the maximum
- number of coordinate descent iterations within each Newton update. The
- first element of tol is for terminating the Newton iterations and the second
- for terminating the coordinate descent updates within each Newton
- iteration.}
+Denote the \eqn{i}th row of \code{M} by \eqn{M_i = (M_i^a, M_i^b)}.
+Denote the first two rows of \code{Z} by \eqn{Z_1}, the next two rows by
+\eqn{Z_2}, and so on. Denote the first row of \eqn{Z_i} by \eqn{z_i^a}
+and the second by \eqn{z_i^b}.
+The likelihood for the \eqn{i}th observation is, for a log-concave cdf
+\eqn{R}, \deqn{R(b_i) - R(a_i),}
+
+where \eqn{a_i = M_i^a + \theta' z_i^a } and \eqn{b_i =
+M_i^b + \theta'z_i^b}.
+
+With \eqn{P} denoting \code{pen_factor} and \eqn{\circ} the elementwise
+product, the objective function minimized is \deqn{g(\theta; \lambda, \alpha,
+P) = -\frac{1}{n}\sum_{i = 1}^n \log\{R(b_i) - R(a_i)\} + \alpha \lambda
+\Vert P\circ \theta \Vert_1 + \frac{1}{2}(1 - \alpha)\lambda \Vert P\circ
+\theta\Vert^2.}
+
+WARNING: It is up to the user to ensure \eqn{b_i \geq a_i} for all feasible
+\eqn{\theta} by using appropriate \code{Z} and \code{box_constr}. Thus, it
+may be simpler to, if possible, use the functions \code{icnet} and
+\code{icnet_cat} which handle two important special cases of
+\code{icnet_flex}.
+
+If \code{method = "fista"}, then only the first elements of \code{maxit} and
+\code{tol} are used. If \code{method = "prox_newt"}, then the first element
+of \code{maxit} is the maximum number of Newton iterations, the second is the
+maximum number of line search iterations for each Newton update, and the
+third is the maximum number of coordinate descent iterations within each
+Newton update. The first element of \code{tol} is for terminating the Newton
+iterations and the second for terminating the coordinate descent updates
+within each Newton iteration.
 }
