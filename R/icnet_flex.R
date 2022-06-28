@@ -68,9 +68,9 @@
 #' 
 #' WARNING: It is up to the user to ensure \eqn{b_i \geq a_i} for all feasible
 #' \eqn{\theta} by using appropriate \code{Z} and \code{box_constr}. Thus, it
-#' may be simpler to, if possible, use the functions \code{icnet} and
-#' \code{icnet_cat} which handle two important special cases of
-#' \code{icnet_flex}.
+#' may be simpler to, if possible, use the functions \code{fsnet} and
+#' \code{fsnet_cat} which handle two important special cases of
+#' \code{fsnet_flex}.
 #'
 #' If \code{method = "fista"}, then only the first elements of \code{maxit} and
 #' \code{tol} are used. If \code{method = "prox_newt"}, then the first element
@@ -81,11 +81,11 @@
 #' iterations and the second for terminating the coordinate descent updates
 #' within each Newton iteration.
 
-#' @useDynLib icnet, .registration = TRUE
+#' @useDynLib fsnet, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom Rcpp evalCpp
 #' @export
-icnet_flex <- function(M,
+fsnet_flex <- function(M,
                    Z,
                    theta,
                    lam = 1e-5,

@@ -111,11 +111,11 @@
 #' iterations and the second for terminating the coordinate descent updates
 #' within each Newton iteration.
 
-#' @useDynLib icnet, .registration = TRUE
+#' @useDynLib fsnet, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom Rcpp evalCpp
 #' @export
-icnet <- function(Y,
+fsnet <- function(Y,
                   X,
                   lam = 1e-5,
                   alpha = 0,
@@ -402,7 +402,7 @@ icnet <- function(Y,
     cv_sd <- apply(cv_mat, 1, stats::sd) # Standard deviation of mcr for each lam
     best_idx <- which.min(cv_err)
     lam_star <- lam[best_idx]
-    full_fit <- icnet(Y = Y, X = X, lam = lam, alpha = alpha,
+    full_fit <- fsnet(Y = Y, X = X, lam = lam, alpha = alpha,
                       pen_factor = pen_factor, b = b, s = s, fix_var = fix_var,
                       box_constr = box_constr, L = L, maxit = maxit, tol = tol,
                       method = method, distr = distr, verbose = verbose,
