@@ -325,9 +325,6 @@ fsnet_cat <- function(Y,
       # If not cross-validating, save output and move to next lam
       #########################################################################
       if(nfold == 1){
-        #out[ii, 1:(p + 1)] <- c(s, b)
-        #out[ii, p + 2] <- lam[ii]
-        #out[ii, p + 3] <- fit[["iter"]]
         out$gam[, ii] <- gam
         if(p > 0) out$beta[, ii] <- b
         out$theta[, ii] <- c(gam, b)
@@ -361,24 +358,17 @@ fsnet_cat <- function(Y,
         # Did algo terminate before maxit?
         early <-  out$iter[ii] < maxit[1]
         if(is_KKT & early){ # All is well
-          #out[ii, p + 4] <- 0
           out$conv[ii] <- 0
-        } else if(is_KKT & !early){
-          #out[ii, p + 4] <- 1 # Found min on sqrt() tolerance but reached maxit
+        } else if(is_KKT & !early){# Found min on sqrt() tolerance but reached maxit
           out$conv[ii] <- 1
         } else if(!is_KKT & !early){ # Did not find min and reached maxit
-          #out[ii, p + 4] <- 2
           out$conv[ii] <- 2
         } else{ # Terminated early but did not find min
-          #out[ii, p + 4] <- 3
           out$conv[ii] <- 3
         }
 
-        #out[ii, p + 6] <- derivs$obj
+
         out$obj[ii] <- derivs$obj
-        # out[ii, p + 7] <- derivs$obj -
-        #                   sum(alpha * lam[ii] * pen_factor * abs(theta)) -
-        #                   0.5 * sum(alpha * lam[ii] * pen_factor * theta^2)
         out$loglik[ii] <- derivs$obj -
                              sum(alpha * lam[ii] * pen_factor * abs(theta)) -
                              0.5 * sum((1 - alpha) * lam[ii] * pen_factor * theta^2)
@@ -397,7 +387,9 @@ fsnet_cat <- function(Y,
         } else{
           pred <- rep(0, n - length(fit_idx))
         }
-        pred_class <- sapply(pred, function(x){sum(x > cumsum(gam))}) + 1
+        gam_sum <- cumsum(gam)
+        class_probs <- sapply(pred, function(x){cdf(c(gam_sum, Inf) - x) - cdf(c(-Inf, gam_sum) - x)})
+        pred_class <- apply(class_probs, 2, which.max)
         real_class <- sapply(Y[-fit_idx], function(x){which(x == levels(Y))})
         # Store mis-classification rate (pred of latent var. outside interval)
         cv_mat[ii, jj] <- mean(pred_class != real_class)
