@@ -358,13 +358,13 @@ fsnet_cat <- function(Y,
         # Did algo terminate before maxit?
         early <-  out$iter[ii] < maxit[1]
         if(is_KKT & early){ # All is well
-          out$conv[ii] <- 0
+          out$conv[ii] <- 0L
         } else if(is_KKT & !early){# Found min on sqrt() tolerance but reached maxit
-          out$conv[ii] <- 1
+          out$conv[ii] <- 1L
         } else if(!is_KKT & !early){ # Did not find min and reached maxit
-          out$conv[ii] <- 2
+          out$conv[ii] <- 2L
         } else{ # Terminated early but did not find min
-          out$conv[ii] <- 3
+          out$conv[ii] <- 3L
         }
 
 

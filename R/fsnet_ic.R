@@ -164,7 +164,6 @@ fsnet_ic <- function(Y,
 
   stopifnot(is.logical(verbose), is.atomic(verbose), length(verbose) == 1)
   stopifnot(is.logical(fix_var), is.atomic(fix_var), length(fix_var) == 1)
-
   n <- nrow(Y)
   stopifnot(nrow(X) == n)
   p <- ncol(X)
@@ -343,17 +342,14 @@ fsnet_ic <- function(Y,
         # Did algo terminate before maxit?
         early <-  out$iter[ii] < maxit[1]
         if(is_KKT & early){ # All is well
-          #out[ii, p + 4] <- 0
-          out$conv[ii] <- 0
+          out$conv[ii] <- 0L
         } else if(is_KKT & !early){
-          #out[ii, p + 4] <- 1 # Found min on sqrt() tolerance but reached maxit
-          out$conv[ii] <- 1
+          # Found min on sqrt() tolerance but reached maxit
+          out$conv[ii] <- 1L
         } else if(!is_KKT & !early){ # Did not find min and reached maxit
-          #out[ii, p + 4] <- 2
-          out$conv[ii] <- 2
+          out$conv[ii] <- 2L
         } else{ # Terminated early but did not find min
-          #out[ii, p + 4] <- 3
-          out$conv[ii] <- 3
+          out$conv[ii] <- 3L
         }
 
         #out[ii, p + 6] <- derivs$obj
